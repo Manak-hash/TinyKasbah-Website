@@ -1,6 +1,7 @@
 "use client";
 
 import { CarouselSlider, type UniverseSlide } from "@/components/watermelon-ui/carousel-slider";
+import KasbahViewer from "@/components/kasbah-viewer";
 import { Croissant, Droplets, Sun, Wind } from "lucide-react";
 import Image from "next/image";
 
@@ -77,7 +78,7 @@ export default function Home() {
 
         <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-16 md:pt-32 md:pb-24 text-center">
           <p className="animate-fade-up text-xs tracking-[0.35em] uppercase text-gold/90">
-            Bientôt — un concept ETS Consult
+            Bientôt — un concept Terrevolution
           </p>
 
           <h1 className="animate-fade-up animation-delay-200 mt-6 text-5xl md:text-7xl font-bold tracking-tight">
@@ -153,6 +154,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ---------- 3D model ---------- */}
+      <section className="max-w-6xl mx-auto px-6 pb-4">
+        <KasbahViewer />
+      </section>
+
       {/* ---------- Features ---------- */}
       <section className="border-t border-sand/10">
         <div className="max-w-6xl mx-auto px-6 py-20 md:py-24">
@@ -206,7 +212,7 @@ export default function Home() {
             contemporain et économiquement viable. »
           </p>
           <p className="mt-6 text-sm text-sand/60">
-            Un concept <span className="text-gold">ETS Consult</span> — suivez
+            Un concept <span className="text-gold">Terrevolution</span> — suivez
             le lancement.
           </p>
           <p className="mt-8 text-xs text-sand/40">
