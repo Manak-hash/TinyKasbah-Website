@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0e0a06;
+  --foreground: #f3ead9;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sand: #e8dcc3;
+  --color-clay: #c96f3b;
+  --color-teal: #1f6f6b;
+  --color-gold: #d9a441;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Subtle zellige-inspired backdrop pattern */
+.zellige-bg {
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(217, 164, 65, 0.05) 0 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, rgba(31, 111, 107, 0.05) 0 2px, transparent 2px),
+    radial-gradient(circle at 75% 25%, rgba(201, 111, 59, 0.04) 0 2px, transparent 2px),
+    radial-gradient(circle at 25% 75%, rgba(232, 220, 195, 0.04) 0 2px, transparent 2px);
+  background-size: 48px 48px;
+}
+
+.arch-mask {
+  border-radius: 999px 999px 24px 24px;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.9s ease-out both;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+.animation-delay-600 {
+  animation-delay: 0.6s;
+}
