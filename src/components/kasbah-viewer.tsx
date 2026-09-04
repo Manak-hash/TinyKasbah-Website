@@ -6,6 +6,7 @@ import type { Group } from "three";
 import { Box3, Plane, Vector3 } from "three";
 import { Html, OrbitControls, useGLTF } from "@react-three/drei";
 import { Loader2, Scissors } from "lucide-react";
+import type { Dictionary } from "@/i18n/dictionaries";
 
 const MODEL_URL = "/models/kasbah.glb";
 
@@ -58,29 +59,27 @@ function SectionCut({ cut }: { cut: number }) {
   return null;
 }
 
-function WebGlFallback() {
+function WebGlFallback({ dict }: { dict: Dictionary }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-sand/70 text-center px-8">
-      <p className="text-sm">Votre navigateur ne peut pas afficher la 3D (WebGL).</p>
-      <p className="text-xs text-sand/50">
-        Essayez un navigateur récent avec l&apos;accélération matérielle activée.
-      </p>
+      <p className="text-sm">{dict.common.webglMissing}</p>
+      <p className="text-xs text-sand/50">{dict.common.webglMissingHint}</p>
     </div>
   );
 }
 
-function LoaderFallback() {
+function LoaderFallback({ dict }: { dict: Dictionary }) {
   return (
     <Html center>
       <div className="flex flex-col items-center gap-3 text-sand/70">
         <Loader2 className="w-7 h-7 animate-spin text-gold" />
-        <p className="text-xs tracking-widest uppercase">Chargement du modèle 3D…</p>
+        <p className="text-xs tracking-widest uppercase">{dict.common.loading3d}</p>
       </div>
     </Html>
   );
 }
 
-export default function KasbahViewer() {
+export default function KasbahViewer({ dict }: { dict: Dictionary }) {
   const [cut, setCut] = useState(0);
   const [webglOk, setWebglOk] = useState(true);
 
@@ -110,7 +109,7 @@ export default function KasbahViewer() {
         />
         <directionalLight position={[-40, 25, -40]} intensity={0.6} color="#a8c8e0" />
 
-        <Suspense fallback={<LoaderFallback />}>
+        <Suspense fallback={<LoaderFallback dict={dict} />}>
           <Model url={MODEL_URL} />
         </Suspense>
 
@@ -125,14 +124,14 @@ export default function KasbahViewer() {
         <SectionCut cut={cutValue} />
       </Canvas>
       ) : (
-        <WebGlFallback />
+        <WebGlFallback dict={dict} />
       )}
 
       {/* Slider: coupe du modèle */}
       <div className="absolute bottom-4 left-4 right-4 flex items-center gap-4">
         <Scissors className="w-4 h-4 text-sand/40 shrink-0" />
         <span className="text-[10px] tracking-[0.25em] uppercase text-sand/50 whitespace-nowrap">
-          Vue intérieure
+          {dict.common.cutLabel}
         </span>
         <input
           type="range"
@@ -140,7 +139,7 @@ export default function KasbahViewer() {
           max={100}
           value={cut}
           onChange={(e) => setCut(Number(e.target.value))}
-          aria-label="Coupe du modèle pour voir l'intérieur"
+          aria-label={dict.common.cutLabel}
           className="w-full accent-[#d9a441]"
         />
       </div>
