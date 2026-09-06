@@ -4,16 +4,14 @@ const de: Messages = {
   common: {
     brandTagline:
       "Die marokkanische Teekunst, neu gedacht als lebendige Architektur",
-    discover: "Konzept entdecken",
     contact: "Kontakt aufnehmen",
     languageLabel: "Sprache",
-    dragToExplore: "Ziehen zum Erkunden",
-    cutLabel: "Innenansicht",
     loading3d: "3D-Modell wird geladen…",
     webglMissing:
       "Ihr Browser kann 3D nicht anzeigen (WebGL).",
     webglMissingHint:
       "Bitte verwenden Sie einen aktuellen Browser mit Hardwarebeschleunigung.",
+    scrollHint: "Scrollen Sie zum Weitergehen",
   },
   hero: {
     badge: "Bald — ein Konzept von Terrevolution",
@@ -21,70 +19,52 @@ const de: Messages = {
     title2: "Kasbah",
     subtitle:
       "Die marokkanische Teekunst, neu gedacht als lebendige Architektur. Ein modularer Teesalon auf 6×6 m — vier Kulturen, eine Seele.",
-    stats: [
-      { value: "4", label: "kulturelle Universen" },
-      { value: "6×6 m", label: "kompaktes Konzept" },
-      { value: "100%", label: "erneuerbare Energie" },
-    ],
+    scrollCta: "Scrollen Sie zum Eintreten",
   },
-  universes: {
-    kicker: "Kulturelle Themen",
-    title: "Vier Kulturen, eine Seele",
-    description:
-      "Der Besucher wählt sein Universum und taucht voll und ganz ein: Dekor, kulturelle Projektionen, Teevariationen und sinnliche Atmosphäre. Eine zentrale Halle unter einer Glaskuppel verbindet die vier Salons — ein Ausstellungsraum für die Teevielfalt.",
-    items: [
-      {
-        title: "Amazigh",
-        subtitle:
-          "Ahorne Geometrie, Pfefferminztee aus dem Hohen Atlas",
-      },
-      {
-        title: "Fassi",
-        subtitle: "Kobaltblaues Zellij, gehauener Stuck, Orangenblüte",
-      },
-      {
-        title: "Sahraoui",
-        subtitle: "Ockerer Minimalismus, Nomadentum, Kamelmilchtee",
-      },
-      {
-        title: "Chamali Rifi",
-        subtitle: "Das Blau von Chefchaouen, wilder Thymian, das Mittelmeer",
-      },
-    ],
-  },
-  viewer: {
-    title: "Die Kasbah in 3D erkunden",
-  },
-  features: {
-    title: "Authentizität präzise gebaut",
-    items: [
-      {
-        title: "Lebendige Architektur",
-        text: "Spitzbögen, Moucharabiehs und Zellij-Brunnen — jeder Salon ist eine kulturelle Projektion.",
-      },
-      {
-        title: "Bioklimatisch",
-        text: "Zenitale Glaskuppel und Photovoltaik-Pergola: passiver Schattenwurf und volle Energieautonomie.",
-      },
-      {
-        title: "Passiver Komfort",
-        text: "Natürliche Lüftung und integrierte Wasserflächen für stille thermische Regulierung.",
-      },
-      {
-        title: "Kompakt & replizierbar",
-        text: "6×6 m, konzipiert für Hotels, Flughäfen, Premium-Souks und Kulturorten.",
-      },
-    ],
-    specs: [
-      { value: "6,00 × 6,60 m", label: "Grundfläche" },
-      { value: "3,60 m", label: "Gesamthöhe" },
-      { value: "4 + 1", label: "Salons + Kuppelhalle" },
-      { value: "WC H/D", label: "Vorbereitungsbereich" },
-    ],
+  tour: {
+    chapter: "Kapitel",
+    entrance: {
+      kicker: "Der Eingang",
+      title: "Eine Miniaturkasbah, ein Gesamterlebnis",
+      text: "Die Tiny Kasbah ist kein gewöhnliches Café. Sie ist ein immersives Architekturkonzept, das die Seele marokkanischer Medinen in ein kompaktes, replizierbares, hochwertiges Format überträgt. Jeder Raum ist eine kulturelle Projektion — Spitzbögen, Moucharabiehs, Wandbrunnen, echtes Zellij.",
+    },
+    hall: {
+      kicker: "Die zentrale Halle",
+      title: "Unter der Glaskuppel",
+      text: "Eine bioklimatische Zenitkuppel badet die zentrale Ausstellungshalle in lebendigem Licht, das mit den Tageszeiten wechselt. Alle vier Salons treffen sich hier — ein Verkostungsbereich, in dem der Besucher sein Universum wählt.",
+    },
+    salon1: {
+      kicker: "Salon — Thema I",
+      title: "Amazigh",
+      text: "Die berberische Essenz — uralte Geometrie, gewebte Teppiche, Pfefferminztee aus dem Hohen Atlas. Eine kulturelle Projektion der Amazigh-Kunst.",
+    },
+    salon2: {
+      kicker: "Salon — Thema II",
+      title: "Fassi",
+      text: "Die Eleganz von Fès — kobaltblaues Zellij, gehauener Stuck, Orangenblütentee. Die raffinierte Seele der geistigen Hauptstadt.",
+    },
+    salon3: {
+      kicker: "Salon — Thema III",
+      title: "Sahraoui",
+      text: "Die Unendlichkeit der Wüste — ockerfarbener Minimalismus, nomadische Textilien, Kamelmilchtee. Die Gelassenheit offener Räume.",
+    },
+    salon4: {
+      kicker: "Salon — Thema IV",
+      title: "Chamali Rifi",
+      text: "Die Lebendigkeit des Nordens — kontrastreiche Farben, geschnitzte Moucharabiehs, Wildthymiantee. Die mediterrane maritime Kultur.",
+    },
+    overview: {
+      kicker: "Gemacht, um zu reisen",
+      title: "Kompakt & replizierbar",
+      text: "Grundfläche 6,00 × 6,60 m, Gesamthöhe 3,60 m, 4 Themensalons + Kuppelhalle, WC H/D und Vorbereitungsbereich. Bioklimatische Solarpergola: passiver Schattenwurf und volle Energieautonomie. Konzipiert für Hotels, Flughäfen, Premium-Souks und Kulturorte.",
+    },
+    cta: {
+      title: "Folgen Sie dem Launch",
+      text: "Das lebendige Erbe Marokkos bewahren, indem man es zugänglich, zeitgemäß und wirtschaftlich tragfähig macht.",
+      button: "Kontakt aufnehmen",
+    },
   },
   footer: {
-    quote:
-      "„Das lebendige Erbe Marokkos bewahren, indem man es zugänglich, zeitgemäß und wirtschaftlich tragfähig macht.“",
     byline:
       "Ein Konzept von Terrevolution — folgen Sie dem Launch.",
     copyright: "Tiny Tea Kasbah. Coming soon.",
