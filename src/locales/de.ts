@@ -12,6 +12,10 @@ const de: Messages = {
     webglMissingHint:
       "Bitte verwenden Sie einen aktuellen Browser mit Hardwarebeschleunigung.",
     scrollHint: "Scrollen Sie zum Weitergehen",
+    exploreIn3d: "Das Konzept erkunden",
+    discover: "Das Konzept entdecken",
+    dragToExplore: "Ziehen zum Erkunden",
+    cutLabel: "Innenschnitt",
   },
   hero: {
     badge: "Bald — ein Konzept von Terrevolution",
@@ -20,6 +24,69 @@ const de: Messages = {
     subtitle:
       "Die marokkanische Teekunst, neu gedacht als lebendige Architektur. Ein modularer Teesalon auf 6×6 m — vier Kulturen, eine Seele.",
     scrollCta: "Scrollen Sie zum Eintreten",
+    stats: [
+      { value: "4", label: "Kulturuniversen" },
+      { value: "6×6 m", label: "kompaktes Konzept" },
+      { value: "100%", label: "erneuerbare Energie" },
+    ],
+  },
+  concept: {
+    backToTour: "3D-Tour",
+  },
+  universes: {
+    kicker: "Kulturelle Themen",
+    title: "Vier Kulturen, eine Seele",
+    description:
+      "Der Besucher wählt sein Universum und taucht vollständig ein: Dekor, kulturelle Projektionen, Teesorten und sinnliche Atmosphäre. Eine zentrale Halle unter der Glaskuppel verbindet die vier Salons — ein Ausstellungsort für Teearomen.",
+    items: [
+      {
+        title: "Amazigh",
+        subtitle:
+          "Uralte Geometrie, Pfefferminztee aus dem Hohen Atlas",
+      },
+      {
+        title: "Fassi",
+        subtitle: "Kobaltblaues Zellij, gehauener Stuck, Orangenblüte",
+      },
+      {
+        title: "Sahraoui",
+        subtitle: "Ockerfarbener Minimalismus, Nomadentum, Kamelmilchtee",
+      },
+      {
+        title: "Chamali Rifi",
+        subtitle: "Chefchaouen-Blau, Wildthymian, das Mittelmeer",
+      },
+    ],
+  },
+  viewer: {
+    title: "Die Kasbah in 3D erkunden",
+  },
+  features: {
+    title: "Authentizität präzise bauen",
+    items: [
+      {
+        title: "Lebendige Architektur",
+        text: "Spitzbögen, Moucharabiehs und Zellij-Brunnen — jeder Salon ist eine kulturelle Projektion.",
+      },
+      {
+        title: "Bioklimatisch",
+        text: "Zenitkuppel und Photovoltaik-Pergola: passiver Schattenwurf und volle Energieautonomie.",
+      },
+      {
+        title: "Passiver Komfort",
+        text: "Natürliche Lüftung und integrierte Wasserelemente für lautlose Wärmeregulierung.",
+      },
+      {
+        title: "Kompakt & replizierbar",
+        text: "6×6 m, konzipiert für Hotels, Flughäfen, Premium-Souks und Kulturorte.",
+      },
+    ],
+    specs: [
+      { value: "6,00 × 6,60 m", label: "Grundfläche" },
+      { value: "3,60 m", label: "Gesamthöhe" },
+      { value: "4 + 1", label: "Salons + Kuppelhalle" },
+      { value: "WC H/D", label: "Vorbereitungsbereich" },
+    ],
   },
   tour: {
     chapter: "Kapitel",
@@ -65,6 +132,8 @@ const de: Messages = {
     },
   },
   footer: {
+    quote:
+      "„Das lebendige Erbe Marokkos bewahren, indem man es zugänglich, zeitgemäß und wirtschaftlich tragfähig macht.“",
     byline:
       "Ein Konzept von Terrevolution — folgen Sie dem Launch.",
     copyright: "Tiny Tea Kasbah. Coming soon.",

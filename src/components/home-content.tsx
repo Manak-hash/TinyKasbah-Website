@@ -21,6 +21,8 @@ export default function HomeContent({
   locale: Locale;
   localeName: string;
 }) {
+  const conceptPath = locale === "fr" ? "/concept" : `/${locale}/concept`;
+
   return (
     <main className="zellige-bg min-h-dvh" lang={locale}>
       {/* ---------- Language switcher (fixed, always reachable) ---------- */}
@@ -29,7 +31,7 @@ export default function HomeContent({
       </div>
 
       {/* ---------- The whole page IS the tour ---------- */}
-      <KasbahTour dict={dict} locale={locale} />
+      <KasbahTour dict={dict} locale={locale} conceptPath={conceptPath} />
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-sand/10">
@@ -37,6 +39,11 @@ export default function HomeContent({
           <p className="inline-flex items-center gap-2 text-xs text-sand/40">
             <Globe className="w-3 h-3" aria-hidden />
             {dict.common.brandTagline}
+          </p>
+          <p className="mt-4 text-xs text-sand/40">
+            <a href={conceptPath} className="underline decoration-sand/30 underline-offset-4 transition-colors hover:text-gold">
+              {dict.common.exploreIn3d}
+            </a>
           </p>
           <p className="mt-4 text-xs text-sand/40">© {new Date().getFullYear()} {dict.footer.copyright}</p>
           <p className="mt-1 text-xs text-sand/30">{dict.footer.byline}</p>
