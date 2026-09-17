@@ -35,6 +35,7 @@ const fr: Messages = {
   universes: {
     kicker: "Les thèmes culturels",
     title: "Quatre cultures, une même âme",
+    hint: "Glissez pour explorer les 4 univers",
     description:
       "Le visiteur choisit son univers et s'y immerge pleinement : décor, projections culturelles, saveurs de thé et atmosphère sensorielle. Un hall central sous skydome relie les quatre salons — un espace d'exposition des saveurs de thé.",
     items: [
@@ -139,6 +140,15 @@ const fr: Messages = {
     bureauEtude: "Bureau d'étude",
     maitreOuvrage: "Maître d'ouvrage",
     partenaire: "Partenaire",
+  },
+  controls: {
+    viewAmazigh: "Salon Amazigh",
+    viewSahraoui: "Salon Sahraoui",
+    viewDome: "Sous la coupole",
+    viewOverview: "Vue d'ensemble",
+    resetView: "Réinitialiser la vue",
+    zoomIn: "Zoom avant",
+    zoomOut: "Zoom arrière",
   },
 };
 

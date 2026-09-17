@@ -249,6 +249,7 @@ export default function KasbahTour({
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         {webglOk ? (
           <Canvas
+            className="pointer-events-none"
             camera={{ position: shifted([-14, 7, 3.2]), fov: 55, near: 0.1, far: 2000 }}
             dpr={[1, 2]}
             gl={{ antialias: true, localClippingEnabled: false }}
@@ -283,26 +284,27 @@ export default function KasbahTour({
         {/* Subtle vignette for panel readability */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-transparent" />
 
-        {/* Info panel — alternates sides per chapter */}
+        {/* Info panel — side-docked & vertically centered on md+, docked to the
+            bottom edge on mobile so the model stays visible above it */}
         <div
-          className={`absolute top-1/2 -translate-y-1/2 w-[min(88vw,380px)] transition-all duration-500 ${
-            side === "left" ? "left-6 md:left-14" : "right-6 md:right-14"
+          className={`absolute inset-x-4 bottom-4 md:inset-x-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:w-[min(88vw,380px)] transition-all duration-500 ${
+            side === "left" ? "md:left-14" : "md:right-14"
           } ${visible ? "opacity-100" : "opacity-0"}`}
         >
           <div
             key={panel}
-            className="rounded-3xl border border-sand/15 bg-[#101312]/85 backdrop-blur-md p-6 md:p-7 shadow-2xl"
+            className="rounded-3xl border border-sand/15 bg-[#101312]/85 backdrop-blur-md p-4 md:p-7 shadow-2xl"
           >
             <p className="text-[10px] tracking-[0.3em] uppercase text-gold">
               {dict.tour.chapter} {chapterIndex}/7 — {panelDict.kicker}
             </p>
-            <h3 className="mt-3 text-2xl md:text-3xl font-bold">{panelDict.title}</h3>
-            <p className="mt-3 text-sm text-sand/70 leading-relaxed">{panelDict.text}</p>
+            <h3 className="mt-2 text-xl md:mt-3 md:text-3xl font-bold">{panelDict.title}</h3>
+            <p className="mt-1.5 text-[13px] leading-snug text-sand/70 md:mt-3 md:text-sm md:leading-relaxed">{panelDict.text}</p>
           </div>
         </div>
 
-        {/* Progress rail */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none">
+        {/* Progress rail — top center on mobile (panel owns the bottom), bottom on md+ */}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 md:top-auto md:bottom-8 flex flex-col items-center gap-3 pointer-events-none">
           <div className="flex gap-1.5">
             {CHAPTER_KEYS.map(
               (k, i) => (
@@ -322,7 +324,7 @@ export default function KasbahTour({
 
         {/* Hero scroll CTA — only before the tour starts */}
         <div
-          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center transition-opacity duration-700 ${
+          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-6 text-center transition-opacity duration-700 ${
             progress < 0.02 ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >

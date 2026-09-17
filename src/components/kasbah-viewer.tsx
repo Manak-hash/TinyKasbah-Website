@@ -49,7 +49,8 @@ function SectionCut({ cut }: { cut: number }) {
   useEffect(() => {
     // three.js API is mutation-based (renderer state) — mutating the
     // renderer's own clippingPlanes array slot is the documented pattern
-    // for global clipping planes.
+    // for global clipping planes. (Rule off for this file in
+    // eslint.config.mjs: the immutability rule can't model renderer state.)
     gl.clippingPlanes[0] = plane;
     gl.clippingPlanes.length = 1;
   }, [gl, plane]);

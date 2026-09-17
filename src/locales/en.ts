@@ -33,6 +33,7 @@ const en = {
   universes: {
     kicker: "Cultural themes",
     title: "Four cultures, one soul",
+    hint: "Swipe to explore the 4 universes",
     description:
       "Visitors choose their universe and fully immerse themselves in it: decor, cultural projections, tea flavours and sensory atmosphere. A central hall under a skydome connects the four salons — a tea-flavour exhibition space.",
     items: [
@@ -137,6 +138,15 @@ const en = {
     bureauEtude: "Bureau d'étude",
     maitreOuvrage: "Maître d'ouvrage",
     partenaire: "Partner",
+  },
+  controls: {
+    viewAmazigh: "Amazigh salon",
+    viewSahraoui: "Sahraoui salon",
+    viewDome: "Under the dome",
+    viewOverview: "Overview",
+    resetView: "Reset view",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
   },
 };
 

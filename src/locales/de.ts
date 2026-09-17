@@ -36,6 +36,7 @@ const de: Messages = {
   universes: {
     kicker: "Kulturelle Themen",
     title: "Vier Kulturen, eine Seele",
+    hint: "Wischen, um die 4 Universen zu erkunden",
     description:
       "Der Besucher wählt sein Universum und taucht vollständig ein: Dekor, kulturelle Projektionen, Teesorten und sinnliche Atmosphäre. Eine zentrale Halle unter der Glaskuppel verbindet die vier Salons — ein Ausstellungsort für Teearomen.",
     items: [
@@ -140,6 +141,15 @@ const de: Messages = {
     bureauEtude: "Büro für Bauwesen",
     maitreOuvrage: "Bauherr",
     partenaire: "Partner",
+  },
+  controls: {
+    viewAmazigh: "Salon Amazigh",
+    viewSahraoui: "Salon Sahraoui",
+    viewDome: "Unter der Kuppel",
+    viewOverview: "Übersicht",
+    resetView: "Ansicht zurücksetzen",
+    zoomIn: "Vergrößern",
+    zoomOut: "Verkleinern",
   },
 };
 

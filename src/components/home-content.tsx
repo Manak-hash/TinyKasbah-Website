@@ -47,13 +47,13 @@ export default function HomeContent({
       <KasbahTour dict={dict} locale={locale} conceptPath={conceptPath} />
 
       {/* ---------- Universes carousel (moved from the concept page) ---------- */}
-      <section id="univers" className="max-w-6xl mx-auto px-6 py-20 md:py-28">
-        <div className="grid md:grid-cols-2 gap-14 items-center">
+      <section id="univers" className="max-w-6xl mx-auto px-5 sm:px-6 py-16 md:py-28">
+        <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center">
           <div>
             <p className="text-xs tracking-[0.3em] uppercase text-teal">
               {dict.universes.kicker}
             </p>
-            <h2 className="mt-4 text-3xl md:text-4xl font-bold">
+            <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold">
               {dict.universes.title}
             </h2>
             <p className="mt-5 text-sand/75 leading-relaxed">
@@ -71,17 +71,17 @@ export default function HomeContent({
             </ul>
           </div>
 
-          <CarouselSlider slides={universes} />
+          <CarouselSlider slides={universes} hint={dict.universes.hint} />
         </div>
       </section>
 
       {/* ---------- Features (moved from the concept page) ---------- */}
       <section className="border-t border-sand/10">
-        <div className="max-w-6xl mx-auto px-6 py-20 md:py-24">
-          <h2 className="text-3xl md:text-4xl font-bold text-center">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 py-16 md:py-24">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center">
             {dict.features.title}
           </h2>
-          <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="mt-10 md:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
             {dict.features.items.map((f, i) => {
               const Icon = FEATURE_ICONS[i];
               return (
@@ -100,7 +100,7 @@ export default function HomeContent({
           </div>
 
           {/* Specs strip */}
-          <div className="mt-12 rounded-3xl border border-sand/12 bg-white/[0.02] px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="mt-10 md:mt-12 rounded-3xl border border-sand/12 bg-white/[0.02] px-4 sm:px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {dict.features.specs.map((s) => (
               <div key={s.label}>
                 <p className="font-semibold text-sand">{s.value}</p>
@@ -113,7 +113,7 @@ export default function HomeContent({
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-sand/10">
-        <div className="max-w-6xl mx-auto px-6 py-14 text-center">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6 py-12 md:py-14 text-center">
           <p className="inline-flex items-center gap-2 text-xs text-sand/40">
             <Globe className="w-3 h-3" aria-hidden />
             {dict.common.brandTagline}

@@ -23,6 +23,7 @@ export interface UniverseSlide {
 
 interface CarouselSliderProps {
   slides: UniverseSlide[];
+  hint?: string;
 }
 
 /* ---------------- Animation Variants ---------------- */
@@ -52,7 +53,7 @@ const variants: Variants = {
 
 /* ---------------- Component ---------------- */
 
-export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides }) => {
+export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides, hint }) => {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
 
@@ -73,9 +74,9 @@ export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides }) => {
   const slide = slides[index];
 
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center w-full max-w-full">
       {/* Slider */}
-      <div className="relative w-64 sm:w-72 aspect-[4/5] flex items-center justify-center -rotate-[6deg]">
+      <div className="relative w-64 sm:w-72 max-w-[82vw] aspect-[4/5] flex items-center justify-center -rotate-[6deg]">
         <AnimatePresence custom={direction} mode="wait">
           <motion.div
             key={index}
@@ -100,7 +101,7 @@ export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides }) => {
                 src={slide.img}
                 alt={slide.title}
                 fill
-                sizes="288px"
+                sizes="(max-width: 640px) 82vw, 288px"
                 draggable={false}
                 className="object-cover w-full h-full pointer-events-none select-none"
               />
@@ -144,8 +145,8 @@ export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides }) => {
         ))}
       </div>
 
-      <p className="mt-6 text-xs text-sand/50 tracking-widest uppercase -rotate-[6deg] pl-4">
-        Glissez pour explorer les 4 univers
+      <p className="mt-6 text-xs text-sand/50 tracking-widest uppercase text-center px-4">
+        {hint}
       </p>
     </div>
   );

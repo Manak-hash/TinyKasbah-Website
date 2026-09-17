@@ -9,8 +9,8 @@ import type { Dictionary } from "@/i18n/dictionaries";
  */
 export default function PartnerCredits({ dict }: { dict: Dictionary }) {
   return (
-    <div className="mt-12 border-t border-sand/10 pt-8">
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-14">
+    <div className="mt-10 md:mt-12 border-t border-sand/10 pt-8">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 md:gap-14">
         {/* Bureau d'étude */}
         <a
           href="https://www.etsconsult.ma/"
