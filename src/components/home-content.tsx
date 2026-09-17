@@ -3,6 +3,7 @@
 import KasbahTour from "@/components/kasbah-tour";
 import LanguageSwitcher from "@/components/language-switcher";
 import PartnerCredits from "@/components/partner-credits";
+import BrandMark from "@/components/brand-mark";
 import { CarouselSlider, type UniverseSlide } from "@/components/watermelon-ui/carousel-slider";
 import { Croissant, Droplets, Sun, Wind } from "lucide-react";
 import { Globe } from "lucide-react";
@@ -38,6 +39,9 @@ export default function HomeContent({
 
   return (
     <main className="zellige-bg min-h-dvh" lang={locale}>
+      {/* ---------- Brand mark (top-left) ---------- */}
+      <BrandMark href={conceptPath} />
+
       {/* ---------- Language switcher (fixed, always reachable) ---------- */}
       <div className="fixed top-5 right-6 z-50">
         <LanguageSwitcher current={locale} currentName={localeName} paths={LOCALE_PATHS} />

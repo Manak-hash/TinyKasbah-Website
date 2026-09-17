@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   title: "Tiny Tea Kasbah — L'art du thé marocain réinventé",
   description:
     "Un salon de thé modulaire de 6×6m : quatre cultures marocaines, une même âme. Amazigh, Fassi, Chamali Rifi, Sahraoui — bientôt.",
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

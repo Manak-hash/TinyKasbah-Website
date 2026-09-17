@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AVAILABLE_LOCALES, isAvailableLocale, LOCALE_NAMES, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import KasbahInterior from "@/components/kasbah-interior";
+import BrandMark from "@/components/brand-mark";
 import LanguageSwitcher from "@/components/language-switcher";
 
 export async function generateStaticParams() {
@@ -33,15 +34,18 @@ export default async function ConceptPage({
         />
       </div>
 
-      {/* ---------- Link back to the main page ---------- */}
-      <div className="absolute top-5 left-6 z-50">
-        <a
-          href={homePath}
-          className="inline-flex items-center gap-2 rounded-full border border-sand/25 bg-background/60 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sand/80 backdrop-blur-sm transition-colors hover:border-gold/60 hover:text-gold"
-        >
-          {dict.concept.backToTour}
-        </a>
-      </div>
+      {/* ---------- Brand + link back to the main page ---------- */}
+      <BrandMark
+        href={homePath}
+        badge={
+          <a
+            href={homePath}
+            className="inline-flex items-center gap-2 rounded-full border border-sand/25 bg-background/60 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sand/80 backdrop-blur-sm transition-colors hover:border-gold/60 hover:text-gold"
+          >
+            {dict.concept.backToTour}
+          </a>
+        }
+      />
     </main>
   );
 }
