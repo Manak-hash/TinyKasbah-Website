@@ -47,11 +47,9 @@ function SectionCut({ cut }: { cut: number }) {
   const plane = useMemo(() => new Plane(new Vector3(-1, 0, 0), cut), [cut]);
 
   useEffect(() => {
-    // three.js API is mutation-based (renderer state), which the React
-    // hooks immutability lint can't model — same situation as Google Maps
-    // marker objects. Mutating the renderer's own array slot is the
-    // documented pattern for global clipping planes.
-    // eslint-disable-next-line react-hooks/immutability
+    // three.js API is mutation-based (renderer state) — mutating the
+    // renderer's own clippingPlanes array slot is the documented pattern
+    // for global clipping planes.
     gl.clippingPlanes[0] = plane;
     gl.clippingPlanes.length = 1;
   }, [gl, plane]);
