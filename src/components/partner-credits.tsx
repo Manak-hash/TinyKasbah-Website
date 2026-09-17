@@ -3,10 +3,18 @@ import type { Dictionary } from "@/i18n/dictionaries";
 
 /**
  * Partner credits shared by the main page and the concept page footer.
- * Logo colors are preserved — no filters — since the ETS Consult mark is
- * green and the Tierrafino wordmark is black on transparent (it sits on a
- * warm light disc so it stays readable on the dark footer).
+ * All three logos render in an identical slot — same light disc, same box,
+ * object-contain — so no mark outweighs the others. Colors are preserved
+ * (no filters): ETS Consult green, Terrevolution orange, Tierrafino black.
  */
+function LogoSlot({ src, alt, sizes }: { src: string; alt: string; sizes: string }) {
+  return (
+    <span className="flex h-12 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#efece6]">
+      <Image src={src} alt={alt} width={96} height={96} sizes={sizes} className="max-h-9 w-auto max-w-[56px] object-contain" />
+    </span>
+  );
+}
+
 export default function PartnerCredits({ dict }: { dict: Dictionary }) {
   return (
     <div className="mt-10 md:mt-12 border-t border-sand/10 pt-8">
@@ -18,13 +26,7 @@ export default function PartnerCredits({ dict }: { dict: Dictionary }) {
           rel="noopener noreferrer"
           className="group flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100"
         >
-          <Image
-            src="/img/ets-consult.png"
-            alt="ETS Consult"
-            width={44}
-            height={44}
-            className="w-11 h-11 object-contain"
-          />
+          <LogoSlot src="/img/ets-consult.png" alt="ETS Consult" sizes="64px" />
           <span className="text-left">
             <span className="block text-[9px] tracking-[0.25em] uppercase text-sand/40">
               {dict.footer.bureauEtude}
@@ -42,9 +44,7 @@ export default function PartnerCredits({ dict }: { dict: Dictionary }) {
           rel="noopener noreferrer"
           className="group flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100"
         >
-          <span className="flex w-11 h-11 items-center justify-center rounded-full border border-gold/40 text-gold font-bold text-lg">
-            T
-          </span>
+          <LogoSlot src="/img/terrevolution.png" alt="Terrevolution" sizes="64px" />
           <span className="text-left">
             <span className="block text-[9px] tracking-[0.25em] uppercase text-sand/40">
               {dict.footer.maitreOuvrage}
@@ -62,15 +62,7 @@ export default function PartnerCredits({ dict }: { dict: Dictionary }) {
           rel="noopener noreferrer"
           className="group flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100"
         >
-          <span className="flex h-11 items-center justify-center rounded-full bg-[#efece6] px-4">
-            <Image
-              src="/img/tierrafino.png"
-              alt="Tierrafino"
-              width={128}
-              height={31}
-              className="w-32 h-auto"
-            />
-          </span>
+          <LogoSlot src="/img/tierrafino.png" alt="Tierrafino" sizes="64px" />
           <span className="text-left">
             <span className="block text-[9px] tracking-[0.25em] uppercase text-sand/40">
               {dict.footer.partenaire}
