@@ -15,6 +15,8 @@ const fr: Messages = {
     discover: "Découvrir le concept",
     dragToExplore: "Glisser pour explorer",
     cutLabel: "Vue intérieure",
+    daylightLabel: "Étude lumineuse",
+    timeLabel: "Heure de la journée",
   },
   hero: {
     badge: "Bientôt — un concept Terrevolution",

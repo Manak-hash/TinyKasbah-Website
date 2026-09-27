@@ -13,6 +13,8 @@ const en = {
     discover: "Discover the concept",
     dragToExplore: "Drag to explore",
     cutLabel: "Interior view",
+    daylightLabel: "Daylight study",
+    timeLabel: "Time of day",
   },
   hero: {
     badge: "Coming soon — a Terrevolution concept",

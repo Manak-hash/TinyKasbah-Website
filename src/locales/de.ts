@@ -15,7 +15,9 @@ const de: Messages = {
     exploreIn3d: "Das Konzept erkunden",
     discover: "Das Konzept entdecken",
     dragToExplore: "Ziehen zum Erkunden",
-    cutLabel: "Innenschnitt",
+    cutLabel: "Innenansicht",
+    daylightLabel: "Tageslichtstudie",
+    timeLabel: "Tageszeit",
   },
   hero: {
     badge: "Bald — ein Konzept von Terrevolution",

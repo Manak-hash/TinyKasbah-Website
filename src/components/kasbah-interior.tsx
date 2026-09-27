@@ -3,18 +3,19 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import type { Group } from "three";
-import { Box3, Plane, Vector3 } from "three";
+import { Box3, Color, Plane, Vector3 } from "three";
 import { Html, MapControls, useGLTF } from "@react-three/drei";
 import {
   Loader2,
   Move3d,
   Scissors,
+  Sun,
+  SunDim,
   ZoomIn,
   ZoomOut,
   RotateCcw,
   Armchair,
   Tent,
-  Sun,
   Mountain,
 } from "lucide-react";
 import type { Dictionary } from "@/i18n/dictionaries";
@@ -28,6 +29,14 @@ const MODEL_URL = "/models/kasbah.glb";
  * paths between waypoints validated against the model's wall geometry
  * (same coordinate space as the scroll tour: raw GLB space minus hall
  * center). Camera flights cancel the instant the user grabs the scene.
+ *
+ * Daylight study: a time-of-day slider drives a continuous sun path over the
+ * kasbah — direction, color temperature and intensity all derive from ONE
+ * time value, so the skydome hall reads differently at each hour (the
+ * bioclimatic story, shown instead of told). Render-space sun arc: east is
+ * +X (the long 12.8 m facade axis), +Z is the southern tilt, elevation peaks
+ * near Casablanca's high noon sun. The interior fill lights stay fixed so
+ * the model never goes fully dark at the day's edges.
  */
 
 /** Hall center in raw GLB space — the model is shifted so this lands at 0. */
@@ -58,6 +67,77 @@ const lerp3 = (a: Vec3, b: Vec3, f: number): [number, number, number] => [
   a[1] + (b[1] - a[1]) * f,
   a[2] + (b[2] - a[2]) * f,
 ];
+
+/* ------------------------------ daylight ------------------------------ */
+
+/** Day arc: 6:00 -> 20:00 mapped to t 0..1. */
+const DAY_START_H = 6;
+const DAY_END_H = 20;
+
+function timeFromT(t: number) {
+  return DAY_START_H + t * (DAY_END_H - DAY_START_H);
+}
+
+function formatClock(t: number) {
+  const h = Math.floor(timeFromT(t));
+  const m = Math.floor((timeFromT(t) - h) * 60);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+/** Sun direction in render space for day-fraction t (0=sunrise, 1=sunset).
+ *  East = +X, noon = high with a southern (+Z) tilt, west = -X. */
+function sunDirection(t: number): Vec3 {
+  const arc = Math.PI * t;
+  const elev = Math.sin(arc); // 0 at edges, 1 at noon
+  const x = -Math.cos(arc); // +1 east morning -> -1 west evening
+  const z = 0.45 * elev; // southern tilt, strongest at noon
+  const y = 0.18 + 0.82 * elev; // grazing light at the day's edges
+  const len = Math.hypot(x, y, z);
+  return [x / len, y / len, z / len];
+}
+
+const NOON_SUN = new Color("#fff6e8");
+const LOW_SUN = new Color("#ff9d5c");
+
+function sunColor(t: number): Color {
+  // warm golden at the edges, near-white at noon
+  return LOW_SUN.clone().lerp(NOON_SUN, Math.pow(Math.sin(Math.PI * t), 0.6));
+}
+
+function sunIntensity(t: number): number {
+  return 0.25 + 2.15 * Math.pow(Math.sin(Math.PI * t), 0.7);
+}
+
+/** Interior fill scale — lanterns carry more of the scene at the day's
+ *  edges, so the daylight change stays unmistakable from inside. */
+function fillScale(t: number): number {
+  return 0.45 + 0.55 * Math.sin(Math.PI * t);
+}
+
+function skyColor(t: number): Color {
+  // page keeps its dark premium mood; the sky warms toward dawn/dusk
+  const noon = new Color("#161b1e");
+  const edge = new Color("#1b140f");
+  return edge.clone().lerp(noon, Math.pow(Math.sin(Math.PI * t), 0.5));
+}
+
+function ambientIntensity(t: number): number {
+  return 0.3 + 0.35 * Math.sin(Math.PI * t);
+}
+
+function SunLight({ time }: { time: number }) {
+  const dir = sunDirection(time);
+  const SUN_DIST = 40;
+  return (
+    <directionalLight
+      position={[dir[0] * SUN_DIST, dir[1] * SUN_DIST, dir[2] * SUN_DIST]}
+      intensity={sunIntensity(time)}
+      color={sunColor(time)}
+    />
+  );
+}
+
+/* ------------------------------ model ------------------------------ */
 
 function Model({ url }: { url: string }) {
   const group = useRef<Group>(null);
@@ -173,6 +253,17 @@ function CameraRig({
   return null;
 }
 
+/** Sky + fog follow the daylight state (same t as the sun). */
+function SkyMood({ time }: { time: number }) {
+  const sky = useMemo(() => skyColor(time), [time]);
+  return (
+    <>
+      <color attach="background" args={[sky.getHex()]} />
+      <fog attach="fog" args={[sky.getHex(), 40, 160]} />
+    </>
+  );
+}
+
 function WebGlFallback({ dict }: { dict: Dictionary }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-sand/70 text-center px-8">
@@ -200,6 +291,7 @@ const iconBtn =
 
 export default function KasbahInterior({ dict }: { dict: Dictionary }) {
   const [cut, setCut] = useState(0);
+  const [time, setTime] = useState(0.5); // noon by default
   const [webglOk, setWebglOk] = useState(true);
   const [viewReq, setViewReq] = useState<ViewRequest | null>(null);
   const [zoomReq, setZoomReq] = useState<ZoomRequest | null>(null);
@@ -232,18 +324,18 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
             if (!gl.getContext()) setWebglOk(false);
           }}
         >
-          <color attach="background" args={["#0d0f0e"]} />
-          <fog attach="fog" args={["#0d0f0e", 40, 160]} />
+          <SkyMood time={time} />
 
           {/* daylight through the openings */}
-          <ambientLight intensity={0.55} />
-          <directionalLight position={[40, 60, 30]} intensity={1.8} color="#fff4e0" />
+          <ambientLight intensity={ambientIntensity(time)} />
+          <SunLight time={time} />
           <directionalLight position={[-40, 25, -40]} intensity={0.4} color="#a8c8e0" />
-          {/* interior fills — hall + annexes, warm lantern tones */}
-          <pointLight position={[0, 2.4, 0]} intensity={18} color="#ffd9a0" />
-          <pointLight position={[-2.2, 2.4, -2.5]} intensity={12} color="#ffd9a0" />
-          <pointLight position={[2.2, 2.4, 2.2]} intensity={12} color="#ffd9a0" />
-          <pointLight position={[1, 2.4, -4]} intensity={10} color="#ffd9a0" />
+          {/* interior fills — hall + annexes, warm lantern tones; they take
+              over as the sun drops so edges of day read clearly inside */}
+          <pointLight position={[0, 2.4, 0]} intensity={18 * fillScale(time)} color="#ffd9a0" />
+          <pointLight position={[-2.2, 2.4, -2.5]} intensity={12 * fillScale(time)} color="#ffd9a0" />
+          <pointLight position={[2.2, 2.4, 2.2]} intensity={12 * fillScale(time)} color="#ffd9a0" />
+          <pointLight position={[1, 2.4, -4]} intensity={10 * fillScale(time)} color="#ffd9a0" />
 
           <Suspense fallback={<LoaderFallback dict={dict} />}>
             <Model url={MODEL_URL} />
@@ -341,6 +433,39 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
           value={cut}
           onChange={(e) => setCut(Number(e.target.value))}
           aria-label={dict.common.cutLabel}
+          className="h-44 w-auto accent-[#d9a441] [writing-mode:vertical-lr] [direction:rtl]"
+        />
+      </div>
+
+      {/* Daylight study — stacked under the cut slider on touch, vertical
+          right edge above the cut slider on desktop */}
+      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-40 flex md:hidden flex-col items-center gap-1.5 w-56">
+        <span className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-sand/50">
+          <SunDim className="w-3.5 h-3.5 text-gold" aria-hidden />
+          {dict.common.daylightLabel} · {formatClock(time)}
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(time * 100)}
+          onChange={(e) => setTime(Number(e.target.value) / 100)}
+          aria-label={`${dict.common.timeLabel} — ${formatClock(time)}`}
+          className="w-full accent-[#d9a441]"
+        />
+      </div>
+      <div className="absolute right-6 top-16 z-40 hidden md:flex flex-col items-center gap-2">
+        <span className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-sand/50 [writing-mode:vertical-lr]">
+          <SunDim className="w-3.5 h-3.5 rotate-90 text-gold" aria-hidden />
+          {formatClock(time)}
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(time * 100)}
+          onChange={(e) => setTime(Number(e.target.value) / 100)}
+          aria-label={`${dict.common.timeLabel} — ${formatClock(time)}`}
           className="h-44 w-auto accent-[#d9a441] [writing-mode:vertical-lr] [direction:rtl]"
         />
       </div>
