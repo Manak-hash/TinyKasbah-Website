@@ -57,7 +57,7 @@ export default function PartnerCredits({ dict }: { dict: Dictionary }) {
 
         {/* Partenaires */}
         <a
-          href="https://www.enameknes.ac.ma/"
+          href="https://www.enamarrakech.ac.ma/"
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100"

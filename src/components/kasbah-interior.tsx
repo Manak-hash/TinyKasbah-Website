@@ -424,7 +424,11 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
           className="w-full accent-[#d9a441]"
         />
       </div>
-      <div className="absolute right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-3">
+      {/* Cut slider — vertical right edge. Anchored from the TOP at a fixed
+          offset that clears the daylight slider column above it (daylight
+          ends ~264px: top-72 = 288px start). top-1/2 made both columns
+          collide on viewports under ~770px tall. */}
+      <div className="absolute right-6 top-72 z-40 hidden md:flex flex-col items-center gap-3">
         <Scissors className="w-4 h-4 text-sand/40 shrink-0" aria-hidden />
         <input
           type="range"
