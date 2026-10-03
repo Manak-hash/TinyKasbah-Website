@@ -139,9 +139,9 @@ const fr: Messages = {
     byline:
       "Un concept Terrevolution — suivez le lancement.",
     copyright: "Tiny Tea Kasbah. Coming soon.",
-    bureauEtude: "Bureau d'étude",
+    bureauEtude: "Ingénierie",
     maitreOuvrage: "Maître d'ouvrage",
-    partenaire: "Partenaire",
+    partenaire: "Architecte",
   },
   controls: {
     viewAmazigh: "Salon Amazigh",

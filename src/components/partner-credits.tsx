@@ -5,7 +5,7 @@ import type { Dictionary } from "@/i18n/dictionaries";
  * Partner credits shared by the main page and the concept page footer.
  * All three logos render in an identical slot — same light disc, same box,
  * object-contain — so no mark outweighs the others. Colors are preserved
- * (no filters): ETS Consult green, Terrevolution orange, ENAM green, MADA black.
+ * (no filters): ETS Consult green, Terrevolution orange, MADA black.
  */
 function LogoSlot({ src, alt, sizes }: { src: string; alt: string; sizes: string }) {
   return (
@@ -51,24 +51,6 @@ export default function PartnerCredits({ dict }: { dict: Dictionary }) {
             </span>
             <span className="block text-sm font-medium text-sand/80 transition-colors group-hover:text-gold">
               ETS Consult
-            </span>
-          </span>
-        </a>
-
-        {/* Partenaires */}
-        <a
-          href="https://www.enamarrakech.ac.ma/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100"
-        >
-          <LogoSlot src="/img/enam.png" alt="ENAM" sizes="64px" />
-          <span className="text-left">
-            <span className="block text-[9px] tracking-[0.25em] uppercase text-sand/40">
-              {dict.footer.partenaire}
-            </span>
-            <span className="block text-sm font-medium text-sand/80 transition-colors group-hover:text-gold">
-              ENAM
             </span>
           </span>
         </a>
