@@ -85,7 +85,7 @@ const en = {
       { value: "6.00 × 6.60 m", label: "footprint" },
       { value: "3.60 m", label: "total height" },
       { value: "4 + 1", label: "salons + skydome hall" },
-      { value: "M/F WC", label: "preparation area" },
+      { value: "Preparation area", label: "with private restrooms" },
     ],
   },
   tour: {
@@ -123,7 +123,7 @@ const en = {
     overview: {
       kicker: "Built to travel",
       title: "Compact & replicable",
-      text: "6.00 × 6.60 m footprint, 3.60 m total height, 4 thematic salons + skydome hall, M/F WC and preparation area. Bioclimatic solar pergola: passive shading and total energy autonomy. Designed for hotels, airports, premium souks and cultural venues.",
+      text: "6.00 × 6.60 m footprint, 3.60 m total height, 4 thematic salons + skydome hall, preparation area with private restrooms. Bioclimatic solar pergola: passive shading and total energy autonomy. Designed for hotels, airports, premium souks and cultural venues.",
     },
     cta: {
       title: "Follow the launch",

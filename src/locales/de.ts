@@ -88,7 +88,7 @@ const de: Messages = {
       { value: "6,00 × 6,60 m", label: "Grundfläche" },
       { value: "3,60 m", label: "Gesamthöhe" },
       { value: "4 + 1", label: "Salons + Kuppelhalle" },
-      { value: "WC H/D", label: "Vorbereitungsbereich" },
+      { value: "Vorbereitungsbereich", label: "mit eigenen Sanitärräumen" },
     ],
   },
   tour: {
@@ -126,7 +126,7 @@ const de: Messages = {
     overview: {
       kicker: "Gemacht, um zu reisen",
       title: "Kompakt & replizierbar",
-      text: "Grundfläche 6,00 × 6,60 m, Gesamthöhe 3,60 m, 4 Themensalons + Kuppelhalle, WC H/D und Vorbereitungsbereich. Bioklimatische Solarpergola: passiver Schattenwurf und volle Energieautonomie. Konzipiert für Hotels, Flughäfen, Premium-Souks und Kulturorte.",
+      text: "Grundfläche 6,00 × 6,60 m, Gesamthöhe 3,60 m, 4 Themensalons + Kuppelhalle, Vorbereitungsbereich mit eigenen Sanitärräumen. Bioklimatische Solarpergola: passiver Schattenwurf und volle Energieautonomie. Konzipiert für Hotels, Flughäfen, Premium-Souks und Kulturorte.",
     },
     cta: {
       title: "Folgen Sie dem Launch",

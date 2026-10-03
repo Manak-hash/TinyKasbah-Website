@@ -87,7 +87,7 @@ const fr: Messages = {
       { value: "6,00 × 6,60 m", label: "emprise au sol" },
       { value: "3,60 m", label: "hauteur totale" },
       { value: "4 + 1", label: "salons + hall skydome" },
-      { value: "WC H/F", label: "espace préparation" },
+      { value: "Espace préparation", label: "avec sanitaires privatifs" },
     ],
   },
   tour: {
@@ -125,7 +125,7 @@ const fr: Messages = {
     overview: {
       kicker: "Conçu pour voyager",
       title: "Compact & réplicable",
-      text: "Emprise au sol 6,00 × 6,60 m, hauteur totale 3,60 m, 4 salons thématiques + hall skydome, WC H/F et espace préparation. Pergola solaire bioclimatique : ombrage passif et autonomie énergétique totale. Conçu pour les hôtels, aéroports, souks premium et espaces culturels.",
+      text: "Emprise au sol 6,00 × 6,60 m, hauteur totale 3,60 m, 4 salons thématiques + hall skydome, espace préparation avec sanitaires privatifs. Pergola solaire bioclimatique : ombrage passif et autonomie énergétique totale. Conçu pour les hôtels, aéroports, souks premium et espaces culturels.",
     },
     cta: {
       title: "Suivez le lancement",
