@@ -18,7 +18,8 @@ function LogoSlot({ src, alt, sizes }: { src: string; alt: string; sizes: string
 export default function PartnerCredits({ dict }: { dict: Dictionary }) {
   return (
     <div className="mt-10 md:mt-12 border-t border-sand/10 pt-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-8 justify-items-center">
+      {/* 3 entries: stacked on phones, 3-up from tablet up — always centered */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-6 gap-x-8 justify-items-center place-items-center">
         {/* Maître d'ouvrage */}
         <a
           href="https://terrevolution.ma"
