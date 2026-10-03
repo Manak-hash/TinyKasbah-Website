@@ -1,14 +1,70 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Box3, Group } from "three";
+import { Box3, BackSide, Color, Group } from "three";
+import type { ShaderMaterial } from "three";
 import { Html, useGLTF } from "@react-three/drei";
 import { Loader2, ArrowDown } from "lucide-react";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
+import { SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
 
 const MODEL_URL = "/models/kasbah.glb";
+
+/**
+ * Dark desert-night sky dome. Replaces the flat `<color>` background with a
+ * backside-rendered shader sphere (big enough to contain every camera
+ * waypoint, aerial included). Uniforms drive the look from OUTSIDE the
+ * Canvas so the pace can match the scroll without React re-renders:
+ *
+ *   uTime  — seconds since mount; stars twinkle, aurora ribbons drift
+ *   uMood  — scroll progress 0→1; the sky deepens from dusk to night as
+ *            the tour approaches the aerial overview (dawn-reverse arc:
+ *            the visit ends under the stars)
+ *
+ * Palette is the site's own: #16110b zenith, #3d2c18 horizon (sand lit by
+ * a low sun long gone), gold #d9a441 and clay #c96f3b aurora. Fog is
+ * matched to the horizon so the model's far edge melts into the dome
+ * instead of glowing against it.
+ */
+function DesertNightSky({ progress }: { progress: number }) {
+  const mat = useRef<ShaderMaterial>(null);
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uMood: { value: 0 },
+      uBase: { value: new Color("#16110b") },
+      uHorizon: { value: new Color("#3d2c18") },
+      uAuroraA: { value: new Color("#d9a441") },
+      uAuroraB: { value: new Color("#c96f3b") },
+    }),
+    [],
+  );
+
+  useFrame((state) => {
+    if (!mat.current) return;
+    uniforms.uTime.value = state.clock.elapsedTime;
+    uniforms.uMood.value = progress;
+  });
+
+  return (
+    <>
+      <fog attach="fog" args={["#231a10", 60, 220]} />
+      <mesh scale={480} frustumCulled={false} renderOrder={-1}>
+        <sphereGeometry args={[1, 48, 32]} />
+        <shaderMaterial
+          ref={mat}
+          side={BackSide}
+          depthWrite={false}
+          uniforms={uniforms}
+          vertexShader={SKY_VERT}
+          fragmentShader={SKY_FRAG}
+        />
+      </mesh>
+    </>
+  );
+}
 
 /**
  * Scrollytelling tour. Camera waypoints are authored in RAW GLB space, then
@@ -258,8 +314,7 @@ export default function KasbahTour({
               setReady(true);
             }}
           >
-            <color attach="background" args={["#b8c4cc"]} />
-            <fog attach="fog" args={["#c9cfca", 60, 220]} />
+            <DesertNightSky progress={progress} />
 
             <ambientLight intensity={0.9} />
             <directionalLight position={[30, 45, 60]} intensity={2.4} color="#fff4e0" />
@@ -303,7 +358,10 @@ export default function KasbahTour({
           </div>
         </div>
 
-        {/* Progress rail — top center on mobile (panel owns the bottom), bottom on md+ */}
+        {/* Progress rail — top center on mobile (panel owns the bottom), bottom on md+.
+            Once the tour starts (progress > 0.02) the hint gets a dark pill
+            backdrop + brighter text so it stays readable against the lit
+            interior walls; before that, over the open night sky, it sits bare. */}
         <div className="absolute top-20 left-1/2 -translate-x-1/2 md:top-auto md:bottom-8 flex flex-col items-center gap-3 pointer-events-none">
           <div className="flex gap-1.5">
             {CHAPTER_KEYS.map(
@@ -317,7 +375,13 @@ export default function KasbahTour({
               ),
             )}
           </div>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-sand/50">
+          <p
+            className={`text-[10px] tracking-[0.3em] uppercase rounded-full transition-all duration-500 ${
+              visible
+                ? "text-sand/90 bg-[#0e0a06]/70 backdrop-blur-sm px-4 py-1.5 border border-sand/10"
+                : "text-sand/50"
+            }`}
+          >
             {dict.common.scrollHint}
           </p>
         </div>

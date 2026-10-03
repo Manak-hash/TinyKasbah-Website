@@ -23,6 +23,13 @@ const eslintConfig = defineConfig([
     files: ["src/components/kasbah-viewer.tsx", "src/components/kasbah-interior.tsx"],
     rules: { "react-hooks/immutability": "off" },
   },
+  {
+    // Same: the scroll tour's sky dome updates shader uniforms per frame —
+    // uniform .value mutation inside useFrame is the standard three.js
+    // pattern and cannot be expressed as React state.
+    files: ["src/components/kasbah-tour.tsx"],
+    rules: { "react-hooks/immutability": "off" },
+  },
 ]);
 
 export default eslintConfig;
