@@ -153,6 +153,17 @@ const de: Messages = {
     zoomIn: "Vergrößern",
     zoomOut: "Verkleinern",
   },
+  music: {
+    title: "Ambiente — marokkanische Teemusik",
+    expand: "Musiksteuerung anzeigen",
+    collapse: "Musiksteuerung ausblenden",
+    play: "Musik abspielen",
+    pause: "Musik pausieren",
+    mute: "Stummschalten",
+    unmute: "Ton einschalten",
+    volume: "Lautstärke",
+    seek: "Wiedergabeposition",
+  },
 };
 
 export default de;

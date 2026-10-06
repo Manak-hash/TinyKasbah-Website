@@ -150,6 +150,17 @@ const en = {
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
   },
+  music: {
+    title: "Ambiance — Moroccan tea music",
+    expand: "Show music controls",
+    collapse: "Hide music controls",
+    play: "Play music",
+    pause: "Pause music",
+    mute: "Mute",
+    unmute: "Unmute",
+    volume: "Volume",
+    seek: "Seek",
+  },
 };
 
 export type Messages = typeof en;

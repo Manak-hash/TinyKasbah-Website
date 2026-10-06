@@ -152,6 +152,17 @@ const fr: Messages = {
     zoomIn: "Zoom avant",
     zoomOut: "Zoom arrière",
   },
+  music: {
+    title: "Ambiance — musique de thé marocaine",
+    expand: "Afficher les contrôles musicaux",
+    collapse: "Masquer les contrôles musicaux",
+    play: "Lancer la musique",
+    pause: "Mettre en pause",
+    mute: "Couper le son",
+    unmute: "Réactiver le son",
+    volume: "Volume",
+    seek: "Position de lecture",
+  },
 };
 
 export default fr;
