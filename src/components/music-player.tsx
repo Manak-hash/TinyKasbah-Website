@@ -15,6 +15,13 @@ const INTERACTION_EVENTS = [
   "wheel",
 ] as const;
 
+// On mobile the expanded panel briefly covers the hero badge text (top-right
+// position), so it gets out of the way faster there than on desktop.
+const autoCollapseMs = () =>
+  typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches
+    ? 6000
+    : 3500;
+
 export default function MusicPlayer({ dict }: { dict: MusicDict }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -39,7 +46,7 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
     const startAndAnnounce = () => {
       setPlaying(true);
       setExpanded(true);
-      window.setTimeout(() => setExpanded(false), 6000);
+      window.setTimeout(() => setExpanded(false), autoCollapseMs());
     };
 
     const onFirstInteraction = () => {
@@ -138,7 +145,12 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 print:hidden">
+    // Mobile: top-right, tucked UNDER the language switcher (top-16) — the
+    // bottom edge is crowded on both pages (viewpoint pills, sliders, chapter
+    // cards) and an overlay there hurts text visibility. Desktop (md+):
+    // unchanged bottom-right. The expanded panel drops DOWN below the disc
+    // on mobile so it never stretches the top edge or overlaps the switcher.
+    <div className="fixed top-[4.5rem] right-5 z-50 md:top-auto md:bottom-5 print:hidden">
       <audio
         ref={audioRef}
         src="/audio/kasbah-theme.mp3"
@@ -152,30 +164,31 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
       />
 
       <div
-        className={`overflow-hidden rounded-full border transition-all duration-500 ${
+        className={`overflow-hidden transition-all duration-500 ${
           expanded
-            ? "border-sand/25 bg-black/70 backdrop-blur shadow-xl"
-            : "border-sand/25 bg-black/40 backdrop-blur"
+            ? "rounded-3xl border border-sand/25 bg-black/70 backdrop-blur shadow-xl md:rounded-full"
+            : "rounded-full border border-sand/25 bg-black/40 backdrop-blur"
         }`}
       >
-        <div className="flex items-center gap-2 px-2 py-2">
+        <div className="flex flex-col items-end gap-2 p-2 md:flex-row md:items-center md:gap-2 md:px-2 md:py-2">
           {/* Expand/collapse toggle — spinning disc when playing */}
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
             aria-label={expanded ? dict.collapse : dict.expand}
-            className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold/40 bg-gold/10 text-gold"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gold/40 bg-gold/10 text-gold md:h-9 md:w-9"
           >
             <Music
-              className={`h-4 w-4 ${playing ? "animate-[spin_4s_linear_infinite]" : ""}`}
+              className={`h-5 w-5 md:h-4 md:w-4 ${playing ? "animate-[spin_4s_linear_infinite]" : ""}`}
             />
             {playing && (
               <span className="absolute inset-0 rounded-full border border-gold/30 animate-ping [animation-duration:3s]" />
             )}
           </button>
 
-          {/* Collapsible panel: title + controls */}
+          {/* Collapsible panel: title + controls. Mobile = column below the
+              disc; desktop = row to the right of it. */}
           <div
             className={`grid transition-all duration-500 ease-in-out ${
               expanded
@@ -186,9 +199,9 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
             aria-hidden={!expanded}
           >
             {expanded && (
-              <div className="min-w-0">
-                <div className="flex items-baseline gap-2 pr-1">
-                  <p className="truncate text-xs font-medium text-sand">
+              <div className="min-w-0 md:min-w-[16rem]">
+                <div className="flex items-baseline gap-2 md:pr-1">
+                  <p className="max-w-44 truncate text-xs font-medium text-sand md:max-w-none">
                     {dict.title}
                   </p>
                   <p className="shrink-0 text-[10px] tabular-nums text-sand/50">
@@ -205,7 +218,7 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
                   value={current}
                   onChange={(e) => onSeek(Number(e.target.value))}
                   aria-label={dict.seek}
-                  className="mt-1.5 h-1 w-40 cursor-pointer appearance-none rounded-full bg-sand/20 accent-gold sm:w-52"
+                  className="mt-1.5 h-1 w-44 cursor-pointer appearance-none rounded-full bg-sand/20 accent-gold md:w-52"
                 />
 
                 <div className="mt-1.5 flex items-center gap-2">
@@ -213,12 +226,12 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
                     type="button"
                     onClick={togglePlay}
                     aria-label={playing ? dict.pause : dict.play}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-gold text-black transition-transform hover:scale-105"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-gold text-black transition-transform hover:scale-105 md:h-7 md:w-7"
                   >
                     {playing ? (
-                      <Pause className="h-3.5 w-3.5" />
+                      <Pause className="h-4 w-4 md:h-3.5 md:w-3.5" />
                     ) : (
-                      <Play className="h-3.5 w-3.5 translate-x-[1px]" />
+                      <Play className="h-4 w-4 translate-x-[1px] md:h-3.5 md:w-3.5" />
                     )}
                   </button>
 
@@ -226,12 +239,12 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
                     type="button"
                     onClick={toggleMute}
                     aria-label={muted ? dict.unmute : dict.mute}
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-sand/70 transition-colors hover:text-sand"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-sand/70 transition-colors hover:text-sand md:h-7 md:w-7"
                   >
                     {muted ? (
-                      <VolumeX className="h-3.5 w-3.5" />
+                      <VolumeX className="h-4 w-4 md:h-3.5 md:w-3.5" />
                     ) : (
-                      <Volume2 className="h-3.5 w-3.5" />
+                      <Volume2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
                     )}
                   </button>
 
@@ -243,7 +256,7 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
                     value={muted ? 0 : volume}
                     onChange={(e) => onVolume(Number(e.target.value))}
                     aria-label={dict.volume}
-                    className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-sand/20 accent-gold"
+                    className="h-1 w-20 cursor-pointer appearance-none rounded-full bg-sand/20 accent-gold md:w-16"
                   />
                 </div>
               </div>
