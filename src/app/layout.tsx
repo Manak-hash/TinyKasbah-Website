@@ -1,16 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Tiny Tea Kasbah — L'art du thé marocain réinventé",
@@ -24,15 +13,12 @@ export const metadata: Metadata = {
   },
 };
 
+// Root layout is a PASS-THROUGH: the single <html>/<body> shell (with the real
+// per-locale lang attribute AND the font variables) is rendered by
+// [lang]/layout.tsx. A hardcoded lang="fr" here collided with lang="en"/"de"
+// below and caused a React hydration mismatch on /en and /de. Root layouts
+// that render no <html> are supported as long as exactly ONE layout in the
+// tree renders the shell.
 export default function RootLayout({ children }: LayoutProps<"/">) {
-  return (
-    <html
-      lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
-        {children}
-      </body>
-    </html>
-  );
+  return children;
 }

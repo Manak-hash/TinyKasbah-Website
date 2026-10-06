@@ -49,6 +49,8 @@ export default async function LangLayout({
   const { lang } = await params;
   const locale = isAvailableLocale(lang) ? lang : "fr";
   const dict = await getDictionary(locale);
+  // This is the ONLY <html> in the tree (root layout is a pass-through) —
+  // the lang attribute must live here, not in app/layout.tsx.
   return (
     <html
       lang={locale}
