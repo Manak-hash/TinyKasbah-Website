@@ -392,15 +392,17 @@ export default function KasbahTour({
             progress < 0.02 ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <p className="text-xs tracking-[0.35em] uppercase text-gold/90">{dict.hero.badge}</p>
-          <h1 className="mt-4 text-5xl md:text-7xl font-bold tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.6)]">
             {dict.hero.title1}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-clay to-teal">
               {dict.hero.title2}
             </span>
           </h1>
-          <p className="mt-5 text-lg text-sand/85 max-w-xl mx-auto">{dict.hero.subtitle}</p>
-          <div className="mt-8 inline-flex items-center gap-2 text-sand/70 text-xs tracking-[0.25em] uppercase animate-bounce">
+          <div className="mt-5 mx-auto h-px w-16 bg-gradient-to-r from-transparent via-gold/70 to-transparent" aria-hidden />
+          <p className="mt-5 text-lg text-sand/90 leading-relaxed max-w-xl mx-auto drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
+            {dict.hero.subtitle}
+          </p>
+          <div className="mt-8 inline-flex items-center gap-2 text-sand/80 text-xs tracking-[0.25em] uppercase animate-bounce drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
             <ArrowDown className="w-4 h-4" />
             {dict.hero.scrollCta}
           </div>
@@ -416,7 +418,7 @@ export default function KasbahTour({
             <p className="font-semibold">{dict.tour.cta.title}</p>
             <p className="mt-2 text-xs text-sand/70 leading-relaxed">{dict.tour.cta.text}</p>
             <a
-              href="mailto:terrevolution@outlook.com"
+              href="mailto:contact@terrevolution.ma"
               className="mt-4 inline-block px-6 py-2.5 rounded-full bg-clay hover:bg-clay/90 text-white text-sm font-medium transition-colors"
             >
               {dict.tour.cta.button}

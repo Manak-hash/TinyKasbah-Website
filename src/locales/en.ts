@@ -1,6 +1,6 @@
 const en = {
   common: {
-    brandTagline: "Moroccan tea art reinvented as living architecture",
+    brandTagline: "The art of Moroccan tea as living architecture",
     contact: "Contact us",
     languageLabel: "Language",
     loading3d: "Loading 3D model…",
@@ -21,11 +21,11 @@ const en = {
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:
-      "The art of Moroccan tea reinvented as living architecture. A modular 6×6 m tea salon — four cultures, one soul.",
+      "A 6.00 × 6.60 m tea salon, four Moroccan universes under one kasbah. Architecture like tea: slow, precise, alive.",
     scrollCta: "Scroll to enter",
     stats: [
       { value: "4", label: "cultural universes" },
-      { value: "6×6 m", label: "compact concept" },
+      { value: "6.00 × 6.60 m", label: "compact concept" },
       { value: "100%", label: "renewable energy" },
     ],
   },
@@ -34,7 +34,7 @@ const en = {
   },
   universes: {
     kicker: "Cultural themes",
-    title: "Four cultures, one soul",
+    title: "Four universes, one soul",
     hint: "Swipe to explore the 4 universes",
     description:
       "Visitors choose their universe and fully immerse themselves in it: decor, cultural projections, tea flavours and sensory atmosphere. A central hall under a skydome connects the four salons — a tea-flavour exhibition space.",
@@ -70,15 +70,15 @@ const en = {
       },
       {
         title: "Bioclimatic",
-        text: "Zenithal skydome and photovoltaic pergola: passive shading and total energy autonomy.",
+        text: "Zenithal skydome and photovoltaic pergola: passive shading, designed for energy autonomy.",
       },
       {
         title: "Passive comfort",
-        text: "Natural ventilation and integrated water features for silent thermal regulation.",
+        text: "Natural ventilation, a wall fountain and misting to cool the air — silent thermal regulation.",
       },
       {
         title: "Compact & replicable",
-        text: "6×6 m designed for hotels, airports, premium souks and cultural venues.",
+        text: "6.00 × 6.60 m, 3.60 m total height. Earthen-panel walls on a modular, demountable structure — designed for hotels, airports, cultural venues and event stands: trade shows, fairs, festivals.",
       },
     ],
     specs: [
@@ -123,7 +123,7 @@ const en = {
     overview: {
       kicker: "Built to travel",
       title: "Compact & replicable",
-      text: "6.00 × 6.60 m footprint, 3.60 m total height, 4 thematic salons + skydome hall, preparation area with private restrooms. Bioclimatic solar pergola: passive shading and total energy autonomy. Designed for hotels, airports, premium souks and cultural venues.",
+      text: "6.00 × 6.60 m footprint, 3.60 m total height, 4 thematic salons + skydome hall, preparation area with private restrooms. Earthen-panel walls on a modular, demountable structure. Bioclimatic solar pergola: passive shading, designed for energy autonomy. Designed for hotels, airports, cultural venues and event stands: trade shows, fairs, festivals.",
     },
     cta: {
       title: "Follow the launch",
@@ -136,7 +136,7 @@ const en = {
       "“Preserve Morocco's living heritage by making it accessible, contemporary and economically viable.”",
     byline:
       "A Terrevolution concept — follow the launch.",
-    copyright: "Tiny Tea Kasbah. Coming soon.",
+    copyright: "Terrevolution",
     bureauEtude: "Engineering",
     maitreOuvrage: "Maître d'ouvrage",
     partenaire: "Architect",

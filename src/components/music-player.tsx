@@ -22,6 +22,12 @@ const autoCollapseMs = () =>
     ? 6000
     : 3500;
 
+// Cross-panel exclusivity: opening the music panel must close the language
+// dropdown (and vice versa). Components announce via a window CustomEvent;
+// each listener closes itself when the id is not its own.
+export const UI_PANEL_EVENT = "tinykasbah:panel-open";
+export const UI_PANEL_MUSIC = "music";
+
 export default function MusicPlayer({ dict }: { dict: MusicDict }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -30,6 +36,24 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [expanded, setExpanded] = useState(false);
+
+  // Close this panel when another panel (language switcher) opens.
+  useEffect(() => {
+    const onPanelOpen = (e: Event) => {
+      const detail = (e as CustomEvent<{ id: string }>).detail;
+      if (detail?.id !== UI_PANEL_MUSIC) setExpanded(false);
+    };
+    window.addEventListener(UI_PANEL_EVENT, onPanelOpen);
+    return () => window.removeEventListener(UI_PANEL_EVENT, onPanelOpen);
+  }, []);
+
+  // Announce this panel opening so others close themselves.
+  useEffect(() => {
+    if (!expanded) return;
+    window.dispatchEvent(
+      new CustomEvent(UI_PANEL_EVENT, { detail: { id: UI_PANEL_MUSIC } }),
+    );
+  }, [expanded]);
 
   // Attempt autoplay on mount. If the browser blocks unmuted autoplay
   // (no prior user interaction with the domain), fall back to starting
@@ -167,7 +191,7 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
         className={`overflow-hidden transition-all duration-500 ${
           expanded
             ? "rounded-3xl border border-sand/25 bg-black/70 backdrop-blur shadow-xl md:rounded-full"
-            : "rounded-full border border-sand/25 bg-black/40 backdrop-blur"
+            : "rounded-full border border-gold/25 bg-black/40 backdrop-blur shadow-[0_0_16px_rgba(217,164,65,0.12)]"
         }`}
       >
         <div className="flex flex-col items-end gap-2 p-2 md:flex-row md:items-center md:gap-2 md:px-2 md:py-2">
@@ -177,10 +201,14 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
             aria-label={expanded ? dict.collapse : dict.expand}
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gold/40 bg-gold/10 text-gold md:h-9 md:w-9"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gold/40 bg-gradient-to-br from-gold/15 to-gold/5 text-gold shadow-[0_0_12px_rgba(217,164,65,0.15)] transition-all duration-300 hover:scale-105 hover:border-gold/70 hover:shadow-[0_0_18px_rgba(217,164,65,0.4)] active:scale-95 md:h-9 md:w-9"
           >
             <Music
-              className={`h-5 w-5 md:h-4 md:w-4 ${playing ? "animate-[spin_4s_linear_infinite]" : ""}`}
+              className={`h-5 w-5 md:h-4 md:w-4 ${
+                playing
+                  ? "animate-[spin_4s_linear_infinite]"
+                  : "animate-pulse [animation-duration:3s]"
+              }`}
             />
             {playing && (
               <span className="absolute inset-0 rounded-full border border-gold/30 animate-ping [animation-duration:3s]" />

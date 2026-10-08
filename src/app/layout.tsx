@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Tiny Tea Kasbah — L'art du thé marocain réinventé",
+  title: "Tiny Tea Kasbah — Un salon de thé, quatre univers du Maroc",
   description:
-    "Un salon de thé modulaire de 6×6m : quatre cultures marocaines, une même âme. Amazigh, Fassi, Chamali Rifi, Sahraoui — bientôt.",
+    "Un salon de thé de 6,00 × 6,60 m : quatre univers du Maroc sous une seule kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui — bientôt.",
   icons: {
     icon: [
       { url: "/icon.png", type: "image/png", sizes: "512x512" },

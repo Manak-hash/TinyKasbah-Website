@@ -2,7 +2,7 @@ import type { Messages } from "./en";
 
 const fr: Messages = {
   common: {
-    brandTagline: "L'art du thé marocain réinventé en architecture vivante",
+    brandTagline: "L'art du thé marocain en architecture vivante",
     contact: "Nous contacter",
     languageLabel: "Langue",
     loading3d: "Chargement du modèle 3D…",
@@ -23,11 +23,11 @@ const fr: Messages = {
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:
-      "L'art du thé marocain réinventé en architecture vivante. Un salon de thé modulaire de 6×6 m, quatre cultures, une même âme.",
+      "Un salon de thé de 6,00 × 6,60 m, quatre univers du Maroc sous une seule kasbah. L'architecture comme le thé : lente, précise, vivante.",
     scrollCta: "Défilez pour entrer",
     stats: [
       { value: "4", label: "univers culturels" },
-      { value: "6×6 m", label: "concept compact" },
+      { value: "6,00 × 6,60 m", label: "concept compact" },
       { value: "100%", label: "énergie renouvelable" },
     ],
   },
@@ -36,7 +36,7 @@ const fr: Messages = {
   },
   universes: {
     kicker: "Les thèmes culturels",
-    title: "Quatre cultures, une même âme",
+    title: "Quatre univers, une même âme",
     hint: "Glissez pour explorer les 4 univers",
     description:
       "Le visiteur choisit son univers et s'y immerge pleinement : décor, projections culturelles, saveurs de thé et atmosphère sensorielle. Un hall central sous skydome relie les quatre salons — un espace d'exposition des saveurs de thé.",
@@ -72,15 +72,15 @@ const fr: Messages = {
       },
       {
         title: "Bioclimatique",
-        text: "Skydome zénithal et pergola photovoltaïque : ombrage passif et autonomie énergétique totale.",
+        text: "Skydome zénithal et pergola photovoltaïque : ombrage passif, conçu pour l'autonomie énergétique.",
       },
       {
         title: "Confort passif",
-        text: "Ventilation naturelle et pièces d'eau intégrées pour une régulation thermique silencieuse.",
+        text: "Ventilation naturelle, fontaine murale et brumisation pour rafraîchir l'air — régulation thermique silencieuse.",
       },
       {
         title: "Compact & réplicable",
-        text: "6×6 m pensés pour les hôtels, aéroports, souks premium et espaces culturels.",
+        text: "6,00 × 6,60 m, hauteur totale 3,60 m. Panneaux en terre crue sur structure modulaire et démontable — pensé pour les hôtels, aéroports, espaces culturels et les stands événementiels : salons, foires, festivals.",
       },
     ],
     specs: [
@@ -125,7 +125,7 @@ const fr: Messages = {
     overview: {
       kicker: "Conçu pour voyager",
       title: "Compact & réplicable",
-      text: "Emprise au sol 6,00 × 6,60 m, hauteur totale 3,60 m, 4 salons thématiques + hall skydome, espace préparation avec sanitaires privatifs. Pergola solaire bioclimatique : ombrage passif et autonomie énergétique totale. Conçu pour les hôtels, aéroports, souks premium et espaces culturels.",
+      text: "Emprise au sol 6,00 × 6,60 m, hauteur totale 3,60 m, 4 salons thématiques + hall skydome, espace préparation avec sanitaires privatifs. Panneaux en terre crue sur structure modulaire et démontable. Pergola solaire bioclimatique : ombrage passif, conçu pour l'autonomie énergétique. Conçu pour les hôtels, aéroports, espaces culturels et les stands événementiels : salons, foires, festivals.",
     },
     cta: {
       title: "Suivez le lancement",
@@ -138,7 +138,7 @@ const fr: Messages = {
       "« Préserver le patrimoine vivant du Maroc en le rendant accessible, contemporain et économiquement viable. »",
     byline:
       "Un concept Terrevolution — suivez le lancement.",
-    copyright: "Tiny Tea Kasbah. Coming soon.",
+    copyright: "Terrevolution",
     bureauEtude: "Ingénierie",
     maitreOuvrage: "Maître d'ouvrage",
     partenaire: "Architecte",

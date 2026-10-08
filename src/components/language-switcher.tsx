@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Globe, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import type { Locale } from "@/i18n/config";
+import { UI_PANEL_EVENT } from "./music-player";
 
 const LOCALE_LABELS: Record<Locale, string> = {
   fr: "Français",
@@ -23,8 +24,21 @@ export default function LanguageSwitcher({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  // Close this dropdown when another panel (music player) opens.
+  useEffect(() => {
+    const onPanelOpen = (e: Event) => {
+      const detail = (e as CustomEvent<{ id: string }>).detail;
+      if (detail?.id !== "language") setOpen(false);
+    };
+    window.addEventListener(UI_PANEL_EVENT, onPanelOpen);
+    return () => window.removeEventListener(UI_PANEL_EVENT, onPanelOpen);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
+    window.dispatchEvent(
+      new CustomEvent(UI_PANEL_EVENT, { detail: { id: "language" } }),
+    );
     const onDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };

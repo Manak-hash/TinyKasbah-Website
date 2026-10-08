@@ -3,7 +3,7 @@ import type { Messages } from "./en";
 const de: Messages = {
   common: {
     brandTagline:
-      "Die marokkanische Teekunst, neu gedacht als lebendige Architektur",
+      "Die marokkanische Teekunst als lebendige Architektur",
     contact: "Kontakt aufnehmen",
     languageLabel: "Sprache",
     loading3d: "3D-Modell wird geladen…",
@@ -24,11 +24,11 @@ const de: Messages = {
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:
-      "Die marokkanische Teekunst, neu gedacht als lebendige Architektur. Ein modularer Teesalon auf 6×6 m — vier Kulturen, eine Seele.",
+      "Ein Teesalon auf 6,00 × 6,60 m — vier marokkanische Welten unter einer einzigen Kasbah. Architektur wie Tee: langsam, präzise, lebendig.",
     scrollCta: "Scrollen Sie zum Eintreten",
     stats: [
       { value: "4", label: "Kulturuniversen" },
-      { value: "6×6 m", label: "kompaktes Konzept" },
+      { value: "6,00 × 6,60 m", label: "kompaktes Konzept" },
       { value: "100%", label: "erneuerbare Energie" },
     ],
   },
@@ -37,7 +37,7 @@ const de: Messages = {
   },
   universes: {
     kicker: "Kulturelle Themen",
-    title: "Vier Kulturen, eine Seele",
+    title: "Vier Welten, eine Seele",
     hint: "Wischen, um die 4 Universen zu erkunden",
     description:
       "Der Besucher wählt sein Universum und taucht vollständig ein: Dekor, kulturelle Projektionen, Teesorten und sinnliche Atmosphäre. Eine zentrale Halle unter der Glaskuppel verbindet die vier Salons — ein Ausstellungsort für Teearomen.",
@@ -73,15 +73,15 @@ const de: Messages = {
       },
       {
         title: "Bioklimatisch",
-        text: "Zenitkuppel und Photovoltaik-Pergola: passiver Schattenwurf und volle Energieautonomie.",
+        text: "Zenitkuppel und Photovoltaik-Pergola: passiver Schattenwurf, konzipiert für Energieautonomie.",
       },
       {
         title: "Passiver Komfort",
-        text: "Natürliche Lüftung und integrierte Wasserelemente für lautlose Wärmeregulierung.",
+        text: "Natürliche Lüftung, Wandbrunnen und Verdunstungskühlung gegen warme Luft — lautlose Wärmeregulierung.",
       },
       {
         title: "Kompakt & replizierbar",
-        text: "6×6 m, konzipiert für Hotels, Flughäfen, Premium-Souks und Kulturorte.",
+        text: "6,00 × 6,60 m, Gesamthöhe 3,60 m. Stampflehm-Paneele auf modulärer, demontierbarer Struktur — konzipiert für Hotels, Flughäfen, Kulturorte und Eventstände: Messen, Märkte, Festivals.",
       },
     ],
     specs: [
@@ -126,7 +126,7 @@ const de: Messages = {
     overview: {
       kicker: "Gemacht, um zu reisen",
       title: "Kompakt & replizierbar",
-      text: "Grundfläche 6,00 × 6,60 m, Gesamthöhe 3,60 m, 4 Themensalons + Kuppelhalle, Vorbereitungsbereich mit eigenen Sanitärräumen. Bioklimatische Solarpergola: passiver Schattenwurf und volle Energieautonomie. Konzipiert für Hotels, Flughäfen, Premium-Souks und Kulturorte.",
+      text: "Grundfläche 6,00 × 6,60 m, Gesamthöhe 3,60 m, 4 Themensalons + Kuppelhalle, Vorbereitungsbereich mit eigenen Sanitärräumen. Stampflehm-Paneele auf modulärer, demontierbarer Struktur. Bioklimatische Solarpergola: passiver Schattenwurf, konzipiert für Energieautonomie. Konzipiert für Hotels, Flughäfen, Kulturorte und Eventstände: Messen, Märkte, Festivals.",
     },
     cta: {
       title: "Folgen Sie dem Launch",
@@ -139,7 +139,7 @@ const de: Messages = {
       "„Das lebendige Erbe Marokkos bewahren, indem man es zugänglich, zeitgemäß und wirtschaftlich tragfähig macht.“",
     byline:
       "Ein Konzept von Terrevolution — folgen Sie dem Launch.",
-    copyright: "Tiny Tea Kasbah. Coming soon.",
+    copyright: "Terrevolution",
     bureauEtude: "Ingenieurwesen",
     maitreOuvrage: "Bauherr",
     partenaire: "Architekt",
