@@ -225,6 +225,40 @@ function Model({ url }: { url: string }) {
   );
 }
 
+/**
+ * HeroDim — scene-side readability for the hero text (option A).
+ * While the hero overlay is up (progress ~ 0) the MODEL is dimmed:
+ * lights fade toward a single faint ambient and a subtle dark overlay
+ * sits over the canvas. Scroll restores everything progressively, so
+ * the text stays bare (no scrim boxes) yet high-contrast, and the
+ * kasbah "wakes up" as the visitor enters the tour.
+ */
+function HeroDim({ progress, children }: { progress: number; children: React.ReactNode }) {
+  const group = useRef<Group>(null);
+  // 1 = fully dimmed (hero), 0 = fully lit (tour). Smoothstep kills the seam.
+  const t = Math.min(1, progress / 0.06);
+  const dim = 1 - t * t * (3 - 2 * t);
+
+  useFrame(() => {
+    if (group.current) {
+      group.current.traverse((obj) => {
+        const mesh = obj as { material?: { opacity?: number; transparent?: boolean } };
+        if (mesh.material) {
+          mesh.material.transparent = true;
+          mesh.material.opacity = 1 - 0.82 * dim;
+        }
+      });
+    }
+  });
+
+  return (
+    <>
+      <group ref={group}>{children}</group>
+      <ambientLight intensity={0.9 - 0.72 * dim} />
+    </>
+  );
+}
+
 function ScrollCamera({ progress }: { progress: number }) {
   const { camera } = useThree();
 
@@ -316,19 +350,22 @@ export default function KasbahTour({
           >
             <DesertNightSky progress={progress} />
 
-            <ambientLight intensity={0.9} />
-            <directionalLight position={[30, 45, 60]} intensity={2.4} color="#fff4e0" />
-            <directionalLight position={[-40, 20, -30]} intensity={0.5} color="#a8c8e0" />
-            {/* interior fills so rooms stay readable (raw-space → shifted) */}
-            <pointLight position={shifted([4.4, 2.4, 0.1])} intensity={14} color="#ffd9a0" />
-            <pointLight position={shifted([2.2, 2.4, 0.6])} intensity={10} color="#ffd9a0" />
-            <pointLight position={shifted([6.3, 2.4, -3.5])} intensity={10} color="#ffd9a0" />
-            <pointLight position={shifted([4.4, 2.4, -3.4])} intensity={10} color="#ffd9a0" />
-            <pointLight position={shifted([2.2, 2.4, 1.1])} intensity={7} color="#ffd9a0" />
+            {/* HeroDim owns ambient: it fades 0.9 -> 0.18 while the hero is up.
+                Directional + interior point lights fade with the same curve. */}
+            <HeroDim progress={progress}>
+              <directionalLight position={[30, 45, 60]} intensity={2.4} color="#fff4e0" />
+              <directionalLight position={[-40, 20, -30]} intensity={0.5} color="#a8c8e0" />
+              {/* interior fills so rooms stay readable (raw-space → shifted) */}
+              <pointLight position={shifted([4.4, 2.4, 0.1])} intensity={14} color="#ffd9a0" />
+              <pointLight position={shifted([2.2, 2.4, 0.6])} intensity={10} color="#ffd9a0" />
+              <pointLight position={shifted([6.3, 2.4, -3.5])} intensity={10} color="#ffd9a0" />
+              <pointLight position={shifted([4.4, 2.4, -3.4])} intensity={10} color="#ffd9a0" />
+              <pointLight position={shifted([2.2, 2.4, 1.1])} intensity={7} color="#ffd9a0" />
 
-            <Suspense fallback={<LoaderFallback dict={dict} />}>
-              <Model url={MODEL_URL} />
-            </Suspense>
+              <Suspense fallback={<LoaderFallback dict={dict} />}>
+                <Model url={MODEL_URL} />
+              </Suspense>
+            </HeroDim>
 
             <ScrollCamera progress={progress} />
           </Canvas>
@@ -393,27 +430,28 @@ export default function KasbahTour({
         </div>
 
         {/* Hero — only before the tour starts. Title block sits at optical
-            center; the scroll CTA is pinned to the viewport bottom edge so
-            its position never depends on the text block's height. The
-            subtitle gets a dark scrim behind it: the kasbah walls behind
-            that line are sand-toned, near-identical to the text color. */}
+            center; the scroll CTA is pinned to the viewport bottom edge.
+            Readability comes from the SCENE (HeroDim dims the model while
+            the hero is up), so the text stays completely bare: no scrim,
+            no boxes. */}
         <div
           className={`transition-opacity duration-700 ${
             progress < 0.02 ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-6 text-center">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.75)]">
+          <div className="absolute top-[44%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-6 text-center">
+            <p className="text-[11px] md:text-xs tracking-[0.45em] uppercase text-gold/90 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)]">
+              Un concept Terrevolution
+            </p>
+            <h1 className="mt-4 text-6xl md:text-8xl font-bold tracking-tight drop-shadow-[0_2px_20px_rgba(0,0,0,0.85)]">
               {dict.hero.title1}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-clay to-teal">
                 {dict.hero.title2}
               </span>
             </h1>
-            <div className="mt-5 mx-auto h-px w-16 bg-gradient-to-r from-transparent via-gold/70 to-transparent" aria-hidden />
-            <p className="mt-5 text-lg text-sand/90 leading-relaxed max-w-xl mx-auto">
-              <span className="rounded-2xl bg-black/45 px-3 py-1 box-decoration-clone backdrop-blur-[2px] [text-shadow:0_1px_3px_rgba(0,0,0,0.8)]">
-                {dict.hero.subtitle}
-              </span>
+            <div className="mt-6 mx-auto h-px w-24 bg-gradient-to-r from-transparent via-gold/80 to-transparent" aria-hidden />
+            <p className="mt-6 text-base md:text-xl text-sand/95 leading-relaxed max-w-lg md:max-w-xl mx-auto drop-shadow-[0_1px_10px_rgba(0,0,0,0.9)] [text-shadow:0_1px_4px_rgba(0,0,0,0.7)]">
+              {dict.hero.subtitle}
             </p>
           </div>
           <div className="absolute bottom-6 inset-x-0 flex justify-center md:bottom-8">
