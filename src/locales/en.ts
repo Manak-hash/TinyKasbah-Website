@@ -17,12 +17,12 @@ const en = {
     timeLabel: "Time of day",
   },
   hero: {
-    badge: "Coming soon — a Terrevolution concept",
+    badge: "Coming soon, a Terrevolution concept",
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:
       "A 6.00 × 6.60 m tea salon, four Moroccan universes under one kasbah. Architecture like tea: slow, precise, alive.",
-    scrollCta: "Scroll to enter",
+    scrollCta: "Scroll to visit",
     stats: [
       { value: "4", label: "cultural universes" },
       { value: "6.00 × 6.60 m", label: "compact concept" },
@@ -37,7 +37,7 @@ const en = {
     title: "Four universes, one soul",
     hint: "Swipe to explore the 4 universes",
     description:
-      "Visitors choose their universe and fully immerse themselves in it: decor, cultural projections, tea flavours and sensory atmosphere. A central hall under a skydome connects the four salons — a tea-flavour exhibition space.",
+      "Visitors choose their universe and fully immerse themselves in it: decor, cultural projections, tea flavours and sensory atmosphere. A central hall under a skydome connects the four salons, a tea-flavour exhibition space.",
     items: [
       {
         title: "Amazigh",
@@ -66,7 +66,7 @@ const en = {
     items: [
       {
         title: "Living architecture",
-        text: "Pointed arches, moucharabiehs and zellige fountains — every salon is a cultural projection.",
+        text: "Pointed arches, moucharabiehs and zellige fountains: every salon is a cultural projection.",
       },
       {
         title: "Bioclimatic",
@@ -74,11 +74,11 @@ const en = {
       },
       {
         title: "Passive comfort",
-        text: "Natural ventilation, a wall fountain and misting to cool the air — silent thermal regulation.",
+        text: "Natural ventilation, a wall fountain and misting to cool the air, for silent thermal regulation.",
       },
       {
         title: "Compact & replicable",
-        text: "6.00 × 6.60 m, 3.60 m total height. Earthen-panel walls on a modular, demountable structure — designed for hotels, airports, cultural venues and event stands: trade shows, fairs, festivals.",
+        text: "6.00 × 6.60 m, 3.60 m total height. Earthen-panel walls on a modular, demountable structure, designed for hotels, airports, cultural venues and event stands: trade shows, fairs, festivals.",
       },
     ],
     specs: [
@@ -93,32 +93,32 @@ const en = {
     entrance: {
       kicker: "The entrance",
       title: "A kasbah miniature, a total experience",
-      text: "The Tiny Kasbah is not just a café. It is an immersive architectural device that transposes the soul of Moroccan medinas into a compact, replicable, premium format. Each space is a cultural projection — pointed arches, moucharabiehs, wall fountains, authentic zellige.",
+      text: "The Tiny Kasbah is not just a café. It is an immersive architectural device that transposes the soul of Moroccan medinas into a compact, replicable, premium format. Each space is a cultural projection: pointed arches, moucharabiehs, wall fountains, authentic zellige.",
     },
     hall: {
       kicker: "The central hall",
       title: "Beneath the skydome",
-      text: "A bioclimatic zenithal skydome floods the central exhibition hall with living light that changes with the hours. All four salons connect through it — a tea-flavour tasting space where visitors choose their universe.",
+      text: "A bioclimatic zenithal skydome floods the central exhibition hall with living light that changes with the hours. All four salons connect through it, a tea-flavour tasting space where visitors choose their universe.",
     },
     salon1: {
-      kicker: "Salon — Theme I",
+      kicker: "Salon: Theme I",
       title: "Amazigh",
-      text: "The Berber essence — ancestral geometry, woven rugs, mint tea from the High Atlas mountains. A cultural projection of Amazigh art.",
+      text: "The Berber essence: ancestral geometry, woven rugs, mint tea from the High Atlas mountains. A cultural projection of Amazigh art.",
     },
     salon2: {
-      kicker: "Salon — Theme II",
+      kicker: "Salon: Theme II",
       title: "Fassi",
-      text: "The elegance of Fez — cobalt-blue zellige, carved stucco, orange-blossom tea. The refined soul of the spiritual capital.",
+      text: "The elegance of Fez: cobalt-blue zellige, carved stucco, orange-blossom tea. The refined soul of the spiritual capital.",
     },
     salon3: {
-      kicker: "Salon — Theme III",
+      kicker: "Salon: Theme III",
       title: "Sahraoui",
-      text: "The infinity of the desert — ochre minimalism, nomad textiles, camel-milk tea. The serenity of open spaces.",
+      text: "The infinity of the desert: ochre minimalism, nomad textiles, camel-milk tea. The serenity of open spaces.",
     },
     salon4: {
-      kicker: "Salon — Theme IV",
+      kicker: "Salon: Theme IV",
       title: "Chamali Rifi",
-      text: "The liveliness of the North — contrasted colours, sculpted moucharabiehs, wild-thyme tea. Mediterranean maritime culture.",
+      text: "The liveliness of the North: contrasted colours, sculpted moucharabiehs, wild-thyme tea. Mediterranean maritime culture.",
     },
     overview: {
       kicker: "Built to travel",
@@ -135,7 +135,7 @@ const en = {
     quote:
       "“Preserve Morocco's living heritage by making it accessible, contemporary and economically viable.”",
     byline:
-      "A Terrevolution concept — follow the launch.",
+      "A Terrevolution concept. Follow the launch.",
     copyright: "Terrevolution",
     bureauEtude: "Engineering",
     maitreOuvrage: "Maître d'ouvrage",
@@ -151,7 +151,7 @@ const en = {
     zoomOut: "Zoom out",
   },
   music: {
-    title: "Ambiance — Moroccan tea music",
+    title: "Ambiance: Moroccan tea music",
     expand: "Show music controls",
     collapse: "Hide music controls",
     play: "Play music",

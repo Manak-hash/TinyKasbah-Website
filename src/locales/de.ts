@@ -20,12 +20,12 @@ const de: Messages = {
     timeLabel: "Tageszeit",
   },
   hero: {
-    badge: "Bald — ein Konzept von Terrevolution",
+    badge: "Bald, ein Konzept von Terrevolution",
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:
-      "Ein Teesalon auf 6,00 × 6,60 m — vier marokkanische Welten unter einer einzigen Kasbah. Architektur wie Tee: langsam, präzise, lebendig.",
-    scrollCta: "Scrollen Sie zum Eintreten",
+      "Ein Teesalon auf 6,00 × 6,60 m: vier marokkanische Welten unter einer einzigen Kasbah. Architektur wie Tee: langsam, präzise, lebendig.",
+    scrollCta: "Scrollen Sie für den Rundgang",
     stats: [
       { value: "4", label: "Kulturuniversen" },
       { value: "6,00 × 6,60 m", label: "kompaktes Konzept" },
@@ -40,7 +40,7 @@ const de: Messages = {
     title: "Vier Welten, eine Seele",
     hint: "Wischen, um die 4 Universen zu erkunden",
     description:
-      "Der Besucher wählt sein Universum und taucht vollständig ein: Dekor, kulturelle Projektionen, Teesorten und sinnliche Atmosphäre. Eine zentrale Halle unter der Glaskuppel verbindet die vier Salons — ein Ausstellungsort für Teearomen.",
+      "Der Besucher wählt sein Universum und taucht vollständig ein: Dekor, kulturelle Projektionen, Teesorten und sinnliche Atmosphäre. Eine zentrale Halle unter der Glaskuppel verbindet die vier Salons, ein Ausstellungsort für Teearomen.",
     items: [
       {
         title: "Amazigh",
@@ -69,7 +69,7 @@ const de: Messages = {
     items: [
       {
         title: "Lebendige Architektur",
-        text: "Spitzbögen, Moucharabiehs und Zellij-Brunnen — jeder Salon ist eine kulturelle Projektion.",
+        text: "Spitzbögen, Moucharabiehs und Zellij-Brunnen: jeder Salon ist eine kulturelle Projektion.",
       },
       {
         title: "Bioklimatisch",
@@ -77,11 +77,11 @@ const de: Messages = {
       },
       {
         title: "Passiver Komfort",
-        text: "Natürliche Lüftung, Wandbrunnen und Verdunstungskühlung gegen warme Luft — lautlose Wärmeregulierung.",
+        text: "Natürliche Lüftung, Wandbrunnen und Verdunstungskühlung gegen warme Luft, für lautlose Wärmeregulierung.",
       },
       {
         title: "Kompakt & replizierbar",
-        text: "6,00 × 6,60 m, Gesamthöhe 3,60 m. Stampflehm-Paneele auf modulärer, demontierbarer Struktur — konzipiert für Hotels, Flughäfen, Kulturorte und Eventstände: Messen, Märkte, Festivals.",
+        text: "6,00 × 6,60 m, Gesamthöhe 3,60 m. Stampflehm-Paneele auf modulärer, demontierbarer Struktur, konzipiert für Hotels, Flughäfen, Kulturorte und Eventstände: Messen, Märkte, Festivals.",
       },
     ],
     specs: [
@@ -96,32 +96,32 @@ const de: Messages = {
     entrance: {
       kicker: "Der Eingang",
       title: "Eine Miniaturkasbah, ein Gesamterlebnis",
-      text: "Die Tiny Kasbah ist kein gewöhnliches Café. Sie ist ein immersives Architekturkonzept, das die Seele marokkanischer Medinen in ein kompaktes, replizierbares, hochwertiges Format überträgt. Jeder Raum ist eine kulturelle Projektion — Spitzbögen, Moucharabiehs, Wandbrunnen, echtes Zellij.",
+      text: "Die Tiny Kasbah ist kein gewöhnliches Café. Sie ist ein immersives Architekturkonzept, das die Seele marokkanischer Medinen in ein kompaktes, replizierbares, hochwertiges Format überträgt. Jeder Raum ist eine kulturelle Projektion: Spitzbögen, Moucharabiehs, Wandbrunnen, echtes Zellij.",
     },
     hall: {
       kicker: "Die zentrale Halle",
       title: "Unter der Glaskuppel",
-      text: "Eine bioklimatische Zenitkuppel badet die zentrale Ausstellungshalle in lebendigem Licht, das mit den Tageszeiten wechselt. Alle vier Salons treffen sich hier — ein Verkostungsbereich, in dem der Besucher sein Universum wählt.",
+      text: "Eine bioklimatische Zenitkuppel badet die zentrale Ausstellungshalle in lebendigem Licht, das mit den Tageszeiten wechselt. Alle vier Salons treffen sich hier in einem Verkostungsbereich, in dem der Besucher sein Universum wählt.",
     },
     salon1: {
-      kicker: "Salon — Thema I",
+      kicker: "Salon: Thema I",
       title: "Amazigh",
-      text: "Die berberische Essenz — uralte Geometrie, gewebte Teppiche, Pfefferminztee aus dem Hohen Atlas. Eine kulturelle Projektion der Amazigh-Kunst.",
+      text: "Die berberische Essenz: uralte Geometrie, gewebte Teppiche, Pfefferminztee aus dem Hohen Atlas. Eine kulturelle Projektion der Amazigh-Kunst.",
     },
     salon2: {
-      kicker: "Salon — Thema II",
+      kicker: "Salon: Thema II",
       title: "Fassi",
-      text: "Die Eleganz von Fès — kobaltblaues Zellij, gehauener Stuck, Orangenblütentee. Die raffinierte Seele der geistigen Hauptstadt.",
+      text: "Die Eleganz von Fès: kobaltblaues Zellij, gehauener Stuck, Orangenblütentee. Die raffinierte Seele der geistigen Hauptstadt.",
     },
     salon3: {
-      kicker: "Salon — Thema III",
+      kicker: "Salon: Thema III",
       title: "Sahraoui",
-      text: "Die Unendlichkeit der Wüste — ockerfarbener Minimalismus, nomadische Textilien, Kamelmilchtee. Die Gelassenheit offener Räume.",
+      text: "Die Unendlichkeit der Wüste: ockerfarbener Minimalismus, nomadische Textilien, Kamelmilchtee. Die Gelassenheit offener Räume.",
     },
     salon4: {
-      kicker: "Salon — Thema IV",
+      kicker: "Salon: Thema IV",
       title: "Chamali Rifi",
-      text: "Die Lebendigkeit des Nordens — kontrastreiche Farben, geschnitzte Moucharabiehs, Wildthymiantee. Die mediterrane maritime Kultur.",
+      text: "Die Lebendigkeit des Nordens: kontrastreiche Farben, geschnitzte Moucharabiehs, Wildthymiantee. Die mediterrane maritime Kultur.",
     },
     overview: {
       kicker: "Gemacht, um zu reisen",
@@ -138,7 +138,7 @@ const de: Messages = {
     quote:
       "„Das lebendige Erbe Marokkos bewahren, indem man es zugänglich, zeitgemäß und wirtschaftlich tragfähig macht.“",
     byline:
-      "Ein Konzept von Terrevolution — folgen Sie dem Launch.",
+      "Ein Konzept von Terrevolution. Folgen Sie dem Launch.",
     copyright: "Terrevolution",
     bureauEtude: "Ingenieurwesen",
     maitreOuvrage: "Bauherr",
@@ -154,7 +154,7 @@ const de: Messages = {
     zoomOut: "Verkleinern",
   },
   music: {
-    title: "Ambiente — marokkanische Teemusik",
+    title: "Ambiente: marokkanische Teemusik",
     expand: "Musiksteuerung anzeigen",
     collapse: "Musiksteuerung ausblenden",
     play: "Musik abspielen",

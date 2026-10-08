@@ -24,21 +24,24 @@ export default function LanguageSwitcher({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Close this dropdown when another panel (music player) opens.
+  // Close this dropdown when another panel opens; announce open/close so the
+  // music player can slide below the menu while it is open.
   useEffect(() => {
     const onPanelOpen = (e: Event) => {
-      const detail = (e as CustomEvent<{ id: string }>).detail;
-      if (detail?.id !== "language") setOpen(false);
+      const detail = (e as CustomEvent<{ id: string; open?: boolean }>).detail;
+      if (detail?.id !== "language" && detail?.open) setOpen(false);
     };
     window.addEventListener(UI_PANEL_EVENT, onPanelOpen);
     return () => window.removeEventListener(UI_PANEL_EVENT, onPanelOpen);
   }, []);
 
   useEffect(() => {
-    if (!open) return;
     window.dispatchEvent(
-      new CustomEvent(UI_PANEL_EVENT, { detail: { id: "language" } }),
+      new CustomEvent(UI_PANEL_EVENT, {
+        detail: { id: "language", open },
+      }),
     );
+    if (!open) return;
     const onDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };

@@ -26,14 +26,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params;
   const titles: Record<string, string> = {
-    fr: "Tiny Tea Kasbah — Un salon de thé, quatre univers du Maroc",
-    en: "Tiny Tea Kasbah — One tea salon, four Moroccan universes",
-    de: "Tiny Tea Kasbah — Ein Teesalon, vier marokkanische Welten",
+    fr: "Tiny Tea Kasbah : Un salon de thé, quatre univers du Maroc",
+    en: "Tiny Tea Kasbah: One tea salon, four Moroccan universes",
+    de: "Tiny Tea Kasbah: Ein Teesalon, vier marokkanische Welten",
   };
   const descriptions: Record<string, string> = {
-    fr: "Un salon de thé de 6,00 × 6,60 m : quatre univers du Maroc sous une seule kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui — bientôt.",
-    en: "A 6.00 × 6.60 m tea salon: four Moroccan universes under one kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui — coming soon.",
-    de: "Ein Teesalon auf 6,00 × 6,60 m: vier marokkanische Welten unter einer einzigen Kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui — bald.",
+    fr: "Un salon de thé de 6,00 × 6,60 m : quatre univers du Maroc sous une seule kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui. Bientôt.",
+    en: "A 6.00 × 6.60 m tea salon: four Moroccan universes under one kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui. Coming soon.",
+    de: "Ein Teesalon auf 6,00 × 6,60 m: vier marokkanische Welten unter einer einzigen Kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui. Bald.",
   };
   const locale = isAvailableLocale(lang) ? lang : "fr";
   return { title: titles[locale], description: descriptions[locale] };

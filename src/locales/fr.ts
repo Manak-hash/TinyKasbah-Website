@@ -19,12 +19,12 @@ const fr: Messages = {
     timeLabel: "Heure de la journée",
   },
   hero: {
-    badge: "Bientôt — un concept Terrevolution",
+    badge: "Bientôt, un concept Terrevolution",
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:
       "Un salon de thé de 6,00 × 6,60 m, quatre univers du Maroc sous une seule kasbah. L'architecture comme le thé : lente, précise, vivante.",
-    scrollCta: "Défilez pour entrer",
+    scrollCta: "Défilez pour visiter",
     stats: [
       { value: "4", label: "univers culturels" },
       { value: "6,00 × 6,60 m", label: "concept compact" },
@@ -39,7 +39,7 @@ const fr: Messages = {
     title: "Quatre univers, une même âme",
     hint: "Glissez pour explorer les 4 univers",
     description:
-      "Le visiteur choisit son univers et s'y immerge pleinement : décor, projections culturelles, saveurs de thé et atmosphère sensorielle. Un hall central sous skydome relie les quatre salons — un espace d'exposition des saveurs de thé.",
+      "Le visiteur choisit son univers et s'y immerge pleinement : décor, projections culturelles, saveurs de thé et atmosphère sensorielle. Un hall central sous skydome relie les quatre salons, un espace d'exposition des saveurs de thé.",
     items: [
       {
         title: "Amazigh",
@@ -68,7 +68,7 @@ const fr: Messages = {
     items: [
       {
         title: "Architecture vivante",
-        text: "Arcs brisés, moucharabiehs et fontaines en zellige — chaque salon est une projection culturelle.",
+        text: "Arcs brisés, moucharabiehs et fontaines en zellige : chaque salon est une projection culturelle.",
       },
       {
         title: "Bioclimatique",
@@ -76,11 +76,11 @@ const fr: Messages = {
       },
       {
         title: "Confort passif",
-        text: "Ventilation naturelle, fontaine murale et brumisation pour rafraîchir l'air — régulation thermique silencieuse.",
+        text: "Ventilation naturelle, fontaine murale et brumisation pour rafraîchir l'air, pour une régulation thermique silencieuse.",
       },
       {
         title: "Compact & réplicable",
-        text: "6,00 × 6,60 m, hauteur totale 3,60 m. Panneaux en terre crue sur structure modulaire et démontable — pensé pour les hôtels, aéroports, espaces culturels et les stands événementiels : salons, foires, festivals.",
+        text: "6,00 × 6,60 m, hauteur totale 3,60 m. Panneaux en terre crue sur structure modulaire et démontable, pensé pour les hôtels, aéroports, espaces culturels et les stands événementiels : salons, foires, festivals.",
       },
     ],
     specs: [
@@ -95,32 +95,32 @@ const fr: Messages = {
     entrance: {
       kicker: "L'entrée",
       title: "Une kasbah miniature, une expérience totale",
-      text: "Le Tiny Kasbah n'est pas un simple café. C'est un dispositif architectural immersif qui transpose l'âme des médinas marocaines dans un format compact, réplicable et premium. Chaque espace est une projection culturelle — arcs brisés, moucharabiehs, fontaines murales, zelliges authentiques.",
+      text: "Le Tiny Kasbah n'est pas un simple café. C'est un dispositif architectural immersif qui transpose l'âme des médinas marocaines dans un format compact, réplicable et premium. Chaque espace est une projection culturelle : arcs brisés, moucharabiehs, fontaines murales, zelliges authentiques.",
     },
     hall: {
       kicker: "Le hall central",
       title: "Sous le skydome",
-      text: "Un skydome zénithal bioclimatique inonde le hall central d'exposition d'une lumière vivante qui change au fil des heures. Les quatre salons s'y rejoignent — un espace de dégustation où le visiteur choisit son univers.",
+      text: "Un skydome zénithal bioclimatique inonde le hall central d'exposition d'une lumière vivante qui change au fil des heures. Les quatre salons s'y rejoignent en un espace de dégustation où le visiteur choisit son univers.",
     },
     salon1: {
-      kicker: "Salon — Thème I",
+      kicker: "Salon : thème I",
       title: "Amazigh",
-      text: "L'essence berbère — géométrie ancestrale, tapis tissés, thé à la menthe des montagnes du Haut Atlas. Une projection culturelle de l'art amazigh.",
+      text: "L'essence berbère : géométrie ancestrale, tapis tissés, thé à la menthe des montagnes du Haut Atlas. Une projection culturelle de l'art amazigh.",
     },
     salon2: {
-      kicker: "Salon — Thème II",
+      kicker: "Salon : thème II",
       title: "Fassi",
-      text: "L'élégance de Fès — zellige bleu cobalt, stuc ciselé, thé à la fleur d'oranger. L'âme raffinée de la capitale spirituelle.",
+      text: "L'élégance de Fès : zellige bleu cobalt, stuc ciselé, thé à la fleur d'oranger. L'âme raffinée de la capitale spirituelle.",
     },
     salon3: {
-      kicker: "Salon — Thème III",
+      kicker: "Salon : thème III",
       title: "Sahraoui",
-      text: "L'infini du désert — minimalisme ocre, textiles nomades, thé au lait de chamelle. La sérénité des espaces ouverts.",
+      text: "L'infini du désert : minimalisme ocre, textiles nomades, thé au lait de chamelle. La sérénité des espaces ouverts.",
     },
     salon4: {
-      kicker: "Salon — Thème IV",
+      kicker: "Salon : thème IV",
       title: "Chamali Rifi",
-      text: "La vivacité du Nord — couleurs contrastées, moucharabiehs sculptés, thé au thym sauvage. La culture maritime méditerranéenne.",
+      text: "La vivacité du Nord : couleurs contrastées, moucharabiehs sculptés, thé au thym sauvage. La culture maritime méditerranéenne.",
     },
     overview: {
       kicker: "Conçu pour voyager",
@@ -137,7 +137,7 @@ const fr: Messages = {
     quote:
       "« Préserver le patrimoine vivant du Maroc en le rendant accessible, contemporain et économiquement viable. »",
     byline:
-      "Un concept Terrevolution — suivez le lancement.",
+      "Un concept Terrevolution. Suivez le lancement.",
     copyright: "Terrevolution",
     bureauEtude: "Ingénierie",
     maitreOuvrage: "Maître d'ouvrage",
@@ -153,7 +153,7 @@ const fr: Messages = {
     zoomOut: "Zoom arrière",
   },
   music: {
-    title: "Ambiance — musique de thé marocaine",
+    title: "Ambiance : musique de thé marocaine",
     expand: "Afficher les contrôles musicaux",
     collapse: "Masquer les contrôles musicaux",
     play: "Lancer la musique",

@@ -351,7 +351,7 @@ export default function KasbahTour({
             className="rounded-3xl border border-sand/15 bg-[#101312]/85 backdrop-blur-md p-4 md:p-7 shadow-2xl"
           >
             <p className="text-[10px] tracking-[0.3em] uppercase text-gold">
-              {dict.tour.chapter} {chapterIndex}/7 — {panelDict.kicker}
+              {dict.tour.chapter} {chapterIndex}/7 : {panelDict.kicker}
             </p>
             <h3 className="mt-2 text-xl md:mt-3 md:text-3xl font-bold">{panelDict.title}</h3>
             <p className="mt-1.5 text-[13px] leading-snug text-sand/70 md:mt-3 md:text-sm md:leading-relaxed">{panelDict.text}</p>
@@ -361,8 +361,14 @@ export default function KasbahTour({
         {/* Progress rail — top center on mobile (panel owns the bottom), bottom on md+.
             Once the tour starts (progress > 0.02) the hint gets a dark pill
             backdrop + brighter text so it stays readable against the lit
-            interior walls; before that, over the open night sky, it sits bare. */}
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 md:top-auto md:bottom-8 flex flex-col items-center gap-3 pointer-events-none">
+            interior walls; before that, over the open night sky, it sits bare.
+            The bare hint is also hidden while the hero is on screen — the hero
+            CTA occupies the same bottom-center slot and the two collided. */}
+        <div
+          className={`absolute top-20 left-1/2 -translate-x-1/2 md:top-auto md:bottom-8 flex flex-col items-center gap-3 pointer-events-none transition-opacity duration-500 ${
+            progress < 0.02 ? "md:opacity-0 max-md:opacity-100" : "opacity-100"
+          }`}
+        >
           <div className="flex gap-1.5">
             {CHAPTER_KEYS.map(
               (k, i) => (
@@ -386,25 +392,35 @@ export default function KasbahTour({
           </p>
         </div>
 
-        {/* Hero scroll CTA — only before the tour starts */}
+        {/* Hero — only before the tour starts. Title block sits at optical
+            center; the scroll CTA is pinned to the viewport bottom edge so
+            its position never depends on the text block's height. The
+            subtitle gets a dark scrim behind it: the kasbah walls behind
+            that line are sand-toned, near-identical to the text color. */}
         <div
-          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-6 text-center transition-opacity duration-700 ${
+          className={`transition-opacity duration-700 ${
             progress < 0.02 ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.6)]">
-            {dict.hero.title1}{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-clay to-teal">
-              {dict.hero.title2}
-            </span>
-          </h1>
-          <div className="mt-5 mx-auto h-px w-16 bg-gradient-to-r from-transparent via-gold/70 to-transparent" aria-hidden />
-          <p className="mt-5 text-lg text-sand/90 leading-relaxed max-w-xl mx-auto drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
-            {dict.hero.subtitle}
-          </p>
-          <div className="mt-8 inline-flex items-center gap-2 text-sand/80 text-xs tracking-[0.25em] uppercase animate-bounce drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
-            <ArrowDown className="w-4 h-4" />
-            {dict.hero.scrollCta}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-6 text-center">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight drop-shadow-[0_2px_16px_rgba(0,0,0,0.75)]">
+              {dict.hero.title1}{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-clay to-teal">
+                {dict.hero.title2}
+              </span>
+            </h1>
+            <div className="mt-5 mx-auto h-px w-16 bg-gradient-to-r from-transparent via-gold/70 to-transparent" aria-hidden />
+            <p className="mt-5 text-lg text-sand/90 leading-relaxed max-w-xl mx-auto">
+              <span className="rounded-2xl bg-black/45 px-3 py-1 box-decoration-clone backdrop-blur-[2px] [text-shadow:0_1px_3px_rgba(0,0,0,0.8)]">
+                {dict.hero.subtitle}
+              </span>
+            </p>
+          </div>
+          <div className="absolute bottom-6 inset-x-0 flex justify-center md:bottom-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sand/15 bg-[#0e0a06]/70 px-5 py-2.5 text-sand/90 text-xs tracking-[0.25em] uppercase animate-bounce backdrop-blur-sm drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
+              <ArrowDown className="w-4 h-4" />
+              {dict.hero.scrollCta}
+            </div>
           </div>
         </div>
 

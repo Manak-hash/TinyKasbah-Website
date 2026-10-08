@@ -22,11 +22,13 @@ const autoCollapseMs = () =>
     ? 6000
     : 3500;
 
-// Cross-panel exclusivity: opening the music panel must close the language
-// dropdown (and vice versa). Components announce via a window CustomEvent;
-// each listener closes itself when the id is not its own.
+// Cross-panel exclusivity + layout coordination: components announce via a
+// window CustomEvent (`UI_PANEL_EVENT`) with {id, open}. Listeners close
+// themselves on a foreign id; the music player additionally slides below the
+// language dropdown while it is open (mobile only).
 export const UI_PANEL_EVENT = "tinykasbah:panel-open";
 export const UI_PANEL_MUSIC = "music";
+export const UI_PANEL_LANGUAGE = "language";
 
 export default function MusicPlayer({ dict }: { dict: MusicDict }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -36,12 +38,19 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
 
-  // Close this panel when another panel (language switcher) opens.
+  // Close this panel when another panel (language switcher) opens, and track
+  // the dropdown state so the player can slide below it on mobile.
   useEffect(() => {
     const onPanelOpen = (e: Event) => {
-      const detail = (e as CustomEvent<{ id: string }>).detail;
-      if (detail?.id !== UI_PANEL_MUSIC) setExpanded(false);
+      const detail = (e as CustomEvent<{ id: string; open?: boolean }>).detail;
+      if (detail?.id === UI_PANEL_LANGUAGE) {
+        setLangOpen(detail.open === true);
+        if (detail.open) setExpanded(false);
+      } else if (detail?.id !== UI_PANEL_MUSIC && detail?.open) {
+        setExpanded(false);
+      }
     };
     window.addEventListener(UI_PANEL_EVENT, onPanelOpen);
     return () => window.removeEventListener(UI_PANEL_EVENT, onPanelOpen);
@@ -51,7 +60,9 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
   useEffect(() => {
     if (!expanded) return;
     window.dispatchEvent(
-      new CustomEvent(UI_PANEL_EVENT, { detail: { id: UI_PANEL_MUSIC } }),
+      new CustomEvent(UI_PANEL_EVENT, {
+        detail: { id: UI_PANEL_MUSIC, open: true },
+      }),
     );
   }, [expanded]);
 
@@ -171,10 +182,17 @@ export default function MusicPlayer({ dict }: { dict: MusicDict }) {
   return (
     // Mobile: top-right, tucked UNDER the language switcher (top-16) — the
     // bottom edge is crowded on both pages (viewpoint pills, sliders, chapter
-    // cards) and an overlay there hurts text visibility. Desktop (md+):
-    // unchanged bottom-right. The expanded panel drops DOWN below the disc
-    // on mobile so it never stretches the top edge or overlaps the switcher.
-    <div className="fixed top-[4.5rem] right-5 z-50 md:top-auto md:bottom-5 print:hidden">
+    // cards) and an overlay there hurts text visibility. While the language
+    // dropdown is open, the player slides down below it (animated) instead of
+    // painting over/under the menu. Desktop (md+): unchanged bottom-right —
+    // no overlap there, so no shift.
+    <div
+      className={`fixed top-[4.5rem] right-5 z-50 transition-transform duration-500 ease-in-out md:top-auto md:bottom-5 print:hidden ${
+        langOpen
+          ? "max-md:translate-y-[6.75rem]"
+          : "max-md:translate-y-0"
+      } md:translate-y-0`}
+    >
       <audio
         ref={audioRef}
         src="/audio/kasbah-theme.mp3"
