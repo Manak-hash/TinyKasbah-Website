@@ -5,71 +5,73 @@
 <style>
   :root {
     --paper: #ffffff;
-    --ink: #1d1710;
+    --ink: #241c12;
     --ink-soft: #57503f;
     --gold: #c1913a;
     --clay: #c96f3b;
+    --accent-bg: #c96f3b;
     --line: #e5ddcc;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  /* A6 landscape @ 300dpi: 1748 x 1237 */
+  /* A6 landscape @ ~300dpi: 1748 x 1237 */
   body { width: 1748px; height: 1237px; background: var(--paper); font-family: "Fustat", "Segoe UI", system-ui, sans-serif; color: var(--ink); }
 
-  .card { position: relative; width: 1748px; height: 1237px; padding: 64px 90px 52px; display: flex; flex-direction: column; }
+  .card { position: relative; width: 1748px; height: 1237px; padding: 56px 76px 46px; display: flex; flex-direction: column; }
 
-  .frame { position: absolute; inset: 26px; border: 1px solid var(--line); pointer-events: none; }
-  .frame::after { content: ""; position: absolute; inset: 7px; border: 1px solid #f0eadb; }
+  /* ---- top row: denkmal signet left, messe leipzig right ---- */
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .top img { height: 120px; }
+  .top .messe { height: 96px; }
 
-  /* ---- main row: left = brand+title, right = nothing; centered flow ---- */
-  .top { display: flex; align-items: center; justify-content: space-between; }
-  .brand { display: flex; align-items: center; gap: 22px; }
-  .brand img { height: 96px; }
-  .brand .name { font-size: 30px; font-weight: 700; letter-spacing: .14em; color: var(--ink); }
-
-  .head { text-align: center; margin-top: 44px; }
-  .kicker { font-size: 19px; letter-spacing: .5em; text-transform: uppercase; color: var(--gold); font-weight: 600; padding-left: .5em; }
-  h1 { margin-top: 18px; font-family: "Kufam", "Fustat", system-ui, sans-serif; font-size: 74px; line-height: 1.06; font-weight: 700; color: var(--ink); }
+  .head { text-align: center; margin-top: 30px; }
+  .kicker { font-size: 24px; letter-spacing: .48em; text-transform: uppercase; color: var(--gold); font-weight: 600; padding-left: .48em; }
+  h1 { margin-top: 16px; font-family: "Kufam", "Fustat", system-ui, sans-serif; font-size: 88px; line-height: 1.05; font-weight: 700; color: var(--ink); }
   h1 .accent { color: var(--clay); }
-  .dates { margin-top: 14px; font-size: 26px; letter-spacing: .42em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; padding-left: .42em; }
+  .dates { margin-top: 14px; font-size: 30px; letter-spacing: .4em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; padding-left: .4em; }
 
-  .rule { width: 150px; height: 2px; margin: 36px auto; background: var(--gold); position: relative; }
-  .rule::before, .rule::after { content: ""; position: absolute; top: 50%; width: 7px; height: 7px; background: var(--gold); transform: translateY(-50%) rotate(45deg); }
-  .rule::before { left: -18px; }
-  .rule::after { right: -18px; }
+  .rule { width: 170px; height: 2px; margin: 30px auto; background: var(--gold); position: relative; }
+  .rule::before, .rule::after { content: ""; position: absolute; top: 50%; width: 8px; height: 8px; background: var(--gold); transform: translateY(-50%) rotate(45deg); }
+  .rule::before { left: -20px; }
+  .rule::after { right: -20px; }
 
-  .body-text { text-align: center; font-size: 28px; line-height: 1.75; max-width: 1280px; margin: 0 auto; color: var(--ink); }
+  .body-text { text-align: center; font-size: 33px; line-height: 1.6; max-width: 1440px; margin: 0 auto; color: var(--ink); font-weight: 500; }
   .body-text b { color: var(--clay); font-weight: 700; }
 
-  .infos { margin-top: 44px; display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-  .info { text-align: center; padding: 30px 10px; }
-  .info + .info { border-left: 1px solid var(--line); }
-  .info .label { font-size: 16px; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
-  .info .value { margin-top: 8px; font-size: 26px; font-weight: 700; color: var(--ink); }
+  /* ---- accent strip: full width, clay bg, white text ---- */
+  .strip { margin-top: 32px; background: var(--accent-bg); color: #ffffff; display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 30px 0; }
+  .info { text-align: center; padding: 4px 10px; }
+  .info + .info { border-left: 1px solid rgba(255,255,255,.35); }
+  .info .label { font-size: 19px; letter-spacing: .3em; text-transform: uppercase; color: #ffe3cf; font-weight: 600; }
+  .info .value { margin-top: 10px; font-size: 34px; font-weight: 700; color: #ffffff; }
 
-  /* ---- partners: 4 logos in one row, fills the bottom ---- */
-  .partners { margin-top: auto; padding-top: 40px; }
-  .partners .cap-title { text-align: center; font-size: 16px; letter-spacing: .34em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 34px; }
+  /* ---- partners: 5 slots, Terrevolution dominant ---- */
+  .partners { margin-top: auto; padding-top: 34px; }
+  .partners .cap-title { text-align: center; font-size: 18px; letter-spacing: .34em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 30px; }
   .partners .logos { display: flex; align-items: stretch; }
-  .partners .slot { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 0 10px 8px; }
+  .partners .slot { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 0 8px 6px; }
   .partners .slot + .slot { border-left: 1px solid var(--line); }
-  .partners .imgbox { height: 175px; display: flex; align-items: center; justify-content: center; }
-  .partners img { max-height: 175px; max-width: 330px; object-fit: contain; }
-  .partners .cap { font-size: 15px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-soft); text-align: center; line-height: 1.5; }
+
+  /* Terrevolution = the main partner: bigger slot, bigger logo */
+  .partners .slot.main { flex: 1.6; }
+  .partners .slot.main .imgbox { height: 220px; }
+  .partners .slot.main img { max-height: 220px; max-width: 360px; }
+  .partners .slot.main .cap { font-size: 19px; letter-spacing: .22em; color: var(--ink); font-weight: 700; }
+
+  .partners .slot:not(.main) { flex: 1; }
+  .partners .slot:not(.main) .imgbox { height: 160px; }
+  .partners .slot:not(.main) img { max-height: 160px; max-width: 250px; object-fit: contain; }
+  .partners .slot:not(.main) .cap { font-size: 16px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); text-align: center; line-height: 1.5; }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Kufam:wght@600;700&family=Fustat:wght@400;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Kufam:wght@600;700&family=Fustat:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
 <div class="card">
-  <div class="frame"></div>
-
   <div class="top">
-    <div class="brand">
-      <img src="../public/img/terrevolution.png" alt="Terrevolution" />
-      <span class="name">TERREVOLUTION</span>
-    </div>
+    <img src="../public/img/carte/denkmal-signet.png" alt="Denkmal 2026" />
+    <img class="messe" src="../public/img/carte/messe-leipzig.png" alt="Leipziger Messe" />
   </div>
 
   <div class="head">
@@ -86,7 +88,7 @@
     un projet innovant : <b>la Tiny Kasbah</b>. Ne manquez pas ce rendez-vous !
   </p>
 
-  <div class="infos">
+  <div class="strip">
     <div class="info"><p class="label">Lieu</p><p class="value">Hall 2 / F09-1</p></div>
     <div class="info"><p class="label">Dates</p><p class="value">Du 5 au 7 novembre</p></div>
     <div class="info"><p class="label">Site web</p><p class="value">denkmal-leipzig.de</p></div>
@@ -95,9 +97,9 @@
   <div class="partners">
     <p class="cap-title">Avec nos partenaires</p>
     <div class="logos">
-      <div class="slot">
+      <div class="slot main">
         <div class="imgbox"><img src="../public/img/carte/terrevolution.png" alt="Terrevolution" /></div>
-        <p class="cap">Terrevolution<br/>Maître d'ouvrage</p>
+        <p class="cap">TERREVOLUTION<br/>Maître d'ouvrage</p>
       </div>
       <div class="slot">
         <div class="imgbox"><img src="../public/img/carte/ets-consult-full.png" alt="ETS Consult" /></div>
@@ -108,8 +110,12 @@
         <p class="cap">MADA<br/>Architectes</p>
       </div>
       <div class="slot">
-        <div class="imgbox"><img src="../public/img/carte/enam.png" alt="ENAM Marrakech" /></div>
-        <p class="cap">ENAM<br/>Marrakech</p>
+        <div class="imgbox"><img src="../public/img/carte/ena-new.png" alt="ENA Marrakech" /></div>
+        <p class="cap">ENA<br/>Marrakech</p>
+      </div>
+      <div class="slot">
+        <div class="imgbox"><img src="../public/img/carte/atlas-verein.png" alt="Atlas Verein" /></div>
+        <p class="cap">Atlas Verein<br/>Soziokultureller Atlas e.V.</p>
       </div>
     </div>
   </div>
