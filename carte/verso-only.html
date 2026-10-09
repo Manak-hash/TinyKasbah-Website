@@ -1,131 +1,100 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><style>
-  /* ===== Carte d'invitation Denkmal 2026 — verso TinyKasbah ===== */
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<style>
   :root {
-    --night: #16110b;
-    --night-2: #231a10;
-    --horizon: #3d2c18;
-    --sand: #e8dcc3;
-    --gold: #d9a441;
+    --paper: #ffffff;
+    --ink: #1d1710;
+    --ink-soft: #57503f;
+    --gold: #c1913a;
     --clay: #c96f3b;
-    --teal: #1f6f6b;
+    --line: #e5ddcc;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { background: #050403; font-family: "Georgia", serif; display: flex; flex-direction: column; align-items: center; gap: 3rem; padding: 3rem 0; }
+  body { width: 1050px; height: 1500px; background: var(--paper); font-family: "Fustat", "Segoe UI", system-ui, sans-serif; color: var(--ink); }
 
-  .card {
-    width: 1050px; height: 1500px;   /* A6-ish ratio landscape at 300dpi-ish */
-    position: relative; overflow: hidden;
-    box-shadow: 0 30px 80px rgba(0,0,0,.8);
-  }
+  .card { position: relative; width: 1050px; height: 1500px; padding: 74px 84px 60px; display: flex; flex-direction: column; }
 
-  /* ---------- RECTO ---------- */
-  .recto img { width: 100%; height: 100%; object-fit: cover; }
+  /* thin double frame */
+  .frame { position: absolute; inset: 30px; border: 1px solid var(--line); pointer-events: none; }
+  .frame::after { content: ""; position: absolute; inset: 8px; border: 1px solid #efe9db; }
 
-  /* ---------- VERSO ---------- */
-  .verso { background: radial-gradient(ellipse 120% 90% at 50% 108%, var(--horizon) 0%, var(--night-2) 45%, var(--night) 100%); color: var(--sand); }
+  /* top brand row */
+  .brand { display: flex; justify-content: center; }
+  .brand img { height: 92px; }
 
-  /* stars */
-  .stars { position: absolute; inset: 0; }
-  .star { position: absolute; background: #fff8e8; border-radius: 50%; opacity: .8; }
+  .head { text-align: center; margin-top: 40px; }
+  .kicker { font-size: 17px; letter-spacing: .52em; text-transform: uppercase; color: var(--gold); font-weight: 600; padding-left: .52em; }
+  h1 { margin-top: 22px; font-family: "Kufam", "Fustat", system-ui, sans-serif; font-size: 62px; line-height: 1.08; font-weight: 700; letter-spacing: .01em; color: var(--ink); }
+  h1 .accent { color: var(--clay); }
+  .dates { margin-top: 16px; font-size: 24px; letter-spacing: .4em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; padding-left: .4em; }
 
-  /* subtle zellige corner ornaments */
-  .orn { position: absolute; width: 130px; height: 130px; opacity: .16; border: 2px solid var(--gold); }
-  .orn.tl { top: 26px; left: 26px; border-right: 0; border-bottom: 0; }
-  .orn.tr { top: 26px; right: 26px; border-left: 0; border-bottom: 0; }
-  .orn.bl { bottom: 26px; left: 26px; border-right: 0; border-top: 0; }
-  .orn.br { bottom: 26px; right: 26px; border-left: 0; border-top: 0; }
-  .orn::after { content: ""; position: absolute; inset: 12px; border: 1px solid var(--gold); }
-  .orn.tl::after { border-right: 0; border-bottom: 0; }
-  .orn.tr::after { border-left: 0; border-bottom: 0; }
-  .orn.bl::after { border-right: 0; border-top: 0; }
-  .orn.br::after { border-left: 0; border-top: 0; }
+  .rule { width: 150px; height: 2px; margin: 34px auto; background: var(--gold); position: relative; }
+  .rule::before, .rule::after { content: ""; position: absolute; top: 50%; width: 6px; height: 6px; background: var(--gold); transform: translateY(-50%) rotate(45deg); }
+  .rule::before { left: -16px; }
+  .rule::after { right: -16px; }
 
-  .content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 90px 90px 70px; }
+  .body-text { text-align: center; font-size: 25px; line-height: 1.7; max-width: 780px; margin: 0 auto; color: var(--ink); }
+  .body-text b { color: var(--clay); font-weight: 700; }
 
-  .kicker { font-family: system-ui, sans-serif; font-size: 20px; letter-spacing: .5em; text-transform: uppercase; color: var(--gold); }
-  .headline { margin-top: 26px; font-size: 66px; line-height: 1.12; font-weight: 700; letter-spacing: .01em; }
-  .headline .accent { color: var(--gold); }
-  .dates { margin-top: 18px; font-family: system-ui, sans-serif; font-size: 26px; letter-spacing: .35em; text-transform: uppercase; color: var(--clay); }
+  .infos { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .info { text-align: center; padding: 26px 12px; }
+  .info + .info { border-left: 1px solid var(--line); }
+  .info .label { font-size: 15px; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+  .info .value { margin-top: 10px; font-size: 23px; font-weight: 700; color: var(--ink); }
 
-  .rule { width: 160px; height: 1px; margin: 40px auto 38px; background: linear-gradient(90deg, transparent, var(--gold), transparent); position: relative; }
-  .rule::after { content: "✦"; position: absolute; top: -13px; left: 50%; transform: translateX(-50%); color: var(--gold); font-size: 20px; background: transparent; }
+  .partners { margin-top: auto; }
+  .partners .cap-title { text-align: center; font-size: 14px; letter-spacing: .34em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 30px; }
+  .partners .logos { display: flex; justify-content: center; align-items: stretch; }
+  .partners .slot { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 16px; padding: 0 14px; }
+  .partners .slot + .slot { border-left: 1px solid var(--line); }
+  .partners .imgbox { height: 110px; display: flex; align-items: center; justify-content: center; }
+  .partners img { max-height: 110px; max-width: 200px; object-fit: contain; }
+  .partners .cap { font-size: 13px; letter-spacing: .26em; text-transform: uppercase; color: var(--ink-soft); text-align: center; }
 
-  .body-text { font-size: 27px; line-height: 1.72; max-width: 780px; color: #f2ead9; }
-  .body-text b { color: var(--gold); font-weight: 700; }
+  .site { margin-top: 34px; text-align: center; font-size: 17px; letter-spacing: .42em; color: var(--gold); font-weight: 600; padding-left: .42em; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Kufam:wght@600;700&family=Fustat:wght@400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+<div class="card">
+  <div class="frame"></div>
 
-  .infos { margin-top: 44px; display: flex; flex-direction: column; gap: 14px; font-family: system-ui, sans-serif; font-size: 23px; letter-spacing: .02em; }
-  .infos .row { display: flex; align-items: baseline; justify-content: center; gap: 14px; }
-  .infos .label { color: var(--gold); text-transform: uppercase; letter-spacing: .22em; font-size: 17px; }
-  .infos .value { color: var(--sand); font-weight: 600; }
+  <div class="brand"><img src="../public/img/carte/terrevolution.png" alt="Terrevolution" /></div>
 
-  .partners { margin-top: auto; padding-top: 40px; width: 100%; }
-  .partners .line { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(217,164,65,.4), transparent); margin-bottom: 34px; }
-  .partners .logos { display: flex; justify-content: center; align-items: center; gap: 70px; }
-  .partners .slot { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-  .partners img { filter: brightness(1.05); }
-  .partners .logo-box { background: rgba(232,220,195,.07); border: 1px solid rgba(232,220,195,.15); border-radius: 50%; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; }
-  .partners .logo-box img { max-width: 78%; max-height: 66%; object-fit: contain; }
-  .partners .cap { font-family: system-ui, sans-serif; font-size: 13px; letter-spacing: .28em; text-transform: uppercase; color: rgba(232,220,195,.5); }
-
-  .site { margin-top: 36px; font-family: system-ui, sans-serif; font-size: 18px; letter-spacing: .3em; color: rgba(232,220,195,.55); }
-
-body { padding:0 !important; gap:0 !important; background:#16110b !important; display:block !important; }
-.card.recto { display:none !important; }
-</style></head><body>
-<!-- ================= VERSO : invitation Denkmal ================= -->
-<div class="card verso">
-  <div class="stars" id="stars"></div>
-  <div class="orn tl"></div><div class="orn tr"></div><div class="orn bl"></div><div class="orn br"></div>
-
-  <div class="content">
+  <div class="head">
     <p class="kicker">Un concept Terrevolution</p>
-    <h1 class="headline">INVITATION AU SALON<br/><span class="accent">DENKMAL 2026</span></h1>
-    <p class="dates">5 nov &nbsp;·&nbsp; 7 nov</p>
+    <h1>INVITATION AU SALON<br/><span class="accent">DENKMAL 2026</span></h1>
+    <p class="dates">5 nov — 7 nov</p>
+  </div>
 
-    <div class="rule"></div>
+  <div class="rule"></div>
 
-    <p class="body-text">
-      <b>Terrevolution</b> vous donne rendez-vous à <b>Denkmal Leipzig&nbsp;2026</b>, le premier salon
-      européen dédié au patrimoine sous l'égide de l'UNESCO. Après sa médaille d'or en 2024,
-      le Maroc dévoile un projet innovant : <b>la Tiny Kasbah</b>. Ne manquez pas ce rendez-vous&nbsp;!
-    </p>
+  <p class="body-text">
+    <b>Terrevolution</b> vous donne rendez-vous à <b>Denkmal Leipzig 2026</b>, le premier salon
+    européen dédié au patrimoine sous l'égide de l'UNESCO. Après sa médaille d'or en 2024,
+    le Maroc dévoile un projet innovant : <b>la Tiny Kasbah</b>. Ne manquez pas ce rendez-vous !
+  </p>
 
-    <div class="infos">
-      <div class="row"><span class="label">Lieu</span><span class="value">Hall 2 / F09-1</span></div>
-      <div class="row"><span class="label">Dates</span><span class="value">Du 5 au 7 novembre</span></div>
-      <div class="row"><span class="label">Site web</span><span class="value">denkmal-leipzig.de</span></div>
+  <div class="infos">
+    <div class="info"><p class="label">Lieu</p><p class="value">Hall 2 / F09-1</p></div>
+    <div class="info"><p class="label">Dates</p><p class="value">Du 5 au 7 novembre</p></div>
+    <div class="info"><p class="label">Site web</p><p class="value">denkmal-leipzig.de</p></div>
+  </div>
+
+  <div class="partners">
+    <p class="cap-title">Avec nos partenaires</p>
+    <div class="logos">
+      <div class="slot"><div class="imgbox"><img src="../public/img/carte/ets-consult-full.png" alt="ETS Consult" /></div><p class="cap">ETS Consult<br/>Ingénierie</p></div>
+      <div class="slot"><div class="imgbox"><img src="../public/img/carte/mada.png" alt="MADA Architectes" /></div><p class="cap">MADA<br/>Architectes</p></div>
+      <div class="slot"><div class="imgbox"><img src="../public/img/carte/enam.png" alt="ENAM Marrakech" /></div><p class="cap">ENAM<br/>Marrakech</p></div>
     </div>
-
-    <div class="partners">
-      <div class="line"></div>
-      <div class="logos">
-        <div class="slot"><div class="logo-box"><img src="../public/img/carte/terrevolution.png" alt="Terrevolution"/></div><span class="cap">Maître d'ouvrage</span></div>
-        <div class="slot"><div class="logo-box"><img src="../public/img/carte/ets-consult.png" alt="ETS Consult"/></div><span class="cap">Ingénierie</span></div>
-        <div class="slot"><div class="logo-box"><img src="../public/img/carte/mada.png" alt="MADA Architectes"/></div><span class="cap">Architecte</span></div>
-        <div class="slot"><div class="logo-box"><img src="../public/img/carte/enam.png" alt="ENAM Marrakech"/></div><span class="cap">Partenaire</span></div>
-      </div>
-      <p class="site">TERREVOLUTION.MA</p>
-    </div>
+    <p class="site">TERREVOLUTION.MA</p>
   </div>
 </div>
-
-
-<script>
-  // deterministic star field
-  const holder = document.getElementById("stars");
-  let seed = 42;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 130; i++) {
-    const s = document.createElement("div");
-    s.className = "star";
-    const size = rnd() * 2.2 + 0.6;
-    s.style.width = s.style.height = size + "px";
-    s.style.left = rnd() * 100 + "%";
-    s.style.top = rnd() * 62 + "%";
-    s.style.opacity = 0.25 + rnd() * 0.65;
-    holder.appendChild(s);
-  }
-</script>
-</body></html>
+</body>
+</html>
