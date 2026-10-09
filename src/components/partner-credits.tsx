@@ -57,18 +57,18 @@ export default function PartnerCredits({ dict }: { dict: Dictionary }) {
         </a>
 
         <a
-          href="https://mada.archi/"
+          href="https://www.instagram.com/mada.architectes"
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center gap-3 opacity-80 transition-opacity hover:opacity-100"
         >
-          <LogoSlot src="/img/mada-architecture.png" alt="MADA Architecture" sizes="64px" />
+          <LogoSlot src="/img/mada-architectes.png" alt="MADA Architectes" sizes="64px" />
           <span className="text-left">
             <span className="block text-[9px] tracking-[0.25em] uppercase text-sand/40">
               {dict.footer.partenaire}
             </span>
             <span className="block text-sm font-medium text-sand/80 transition-colors group-hover:text-gold">
-              MADA Architecture
+              MADA Architectes
             </span>
           </span>
         </a>
