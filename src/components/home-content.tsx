@@ -57,7 +57,7 @@ export default function HomeContent({
             <p className="text-xs tracking-[0.3em] uppercase text-teal">
               {dict.universes.kicker}
             </p>
-            <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold">
+            <h2 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-bold font-display">
               {dict.universes.title}
             </h2>
             <p className="mt-5 text-sand/75 leading-relaxed">
@@ -82,7 +82,7 @@ export default function HomeContent({
       {/* ---------- Features (moved from the concept page) ---------- */}
       <section className="border-t border-sand/10">
         <div className="max-w-6xl mx-auto px-5 sm:px-6 py-16 md:py-24">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-display text-center">
             {dict.features.title}
           </h2>
           <div className="mt-10 md:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
