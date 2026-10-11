@@ -116,16 +116,21 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
   // menu resets it. Derived during render, no effect needed.
   const langShown = open && langOpen;
 
-  // Desktop: click outside the trigger + dropdown closes the menu.
+  // Any interaction outside the menu closes it: click, wheel/scroll, or
+  // touch-drag. Events targeting the menu itself (wrapRef) are ignored so
+  // using the sliders never dismisses the menu.
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+    const outside = (e: Event) =>
+      !wrapRef.current?.contains(e.target as Node) && setOpen(false);
+    document.addEventListener("mousedown", outside);
+    window.addEventListener("wheel", outside, { passive: true });
+    window.addEventListener("touchmove", outside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", outside);
+      window.removeEventListener("wheel", outside);
+      window.removeEventListener("touchmove", outside);
     };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
   // Attempt autoplay on mount; fall back to the first interaction anywhere.
@@ -269,7 +274,7 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
           value={current}
           onChange={(e) => onSeek(Number(e.target.value))}
           aria-label={dict.music.seek}
-          className="mt-3 h-2.5 w-full cursor-pointer appearance-none rounded-full bg-sand/20 accent-gold [[&::-webkit-slider-thumb]:h-5] [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gold [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(217,164,65,0.5)]"
+          className="menu-range mt-3 w-full"
         />
 
         <div className="mt-3 flex items-center gap-3">
@@ -307,13 +312,14 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
             value={muted ? 0 : volume}
             onChange={(e) => onVolume(Number(e.target.value))}
             aria-label={dict.music.volume}
-            className="h-2.5 w-full min-w-0 cursor-pointer appearance-none rounded-full bg-sand/20 accent-gold [[&::-webkit-slider-thumb]:h-4] [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gold"
+            className="menu-range w-full min-w-0"
           />
         </div>
       </div>
 
-      {/* Language accordion */}
-      <div className="border-t border-sand/10 pt-3">
+      {/* Language accordion (extra top margin = breathing room under the
+          music controls) */}
+      <div className="mt-2 border-t border-sand/10 pt-3">
         <button
           type="button"
           onClick={() => setLangOpen((v) => !v)}

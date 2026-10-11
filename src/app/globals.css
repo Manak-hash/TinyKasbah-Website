@@ -51,6 +51,49 @@ body {
   animation: eq-bounce 0.9s ease-in-out infinite;
 }
 
+/* Menu sliders (seek + volume). Custom track + thumb: a plain appearance-none
+   range renders NO thumb, which is why the seek bar looked missing/unclickable. */
+.menu-range {
+  height: 10px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.menu-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(232, 220, 195, 0.2);
+}
+
+.menu-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  border: none;
+  box-shadow: 0 0 10px rgba(217, 164, 65, 0.45);
+}
+
+.menu-range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(232, 220, 195, 0.2);
+}
+
+.menu-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  border: none;
+  box-shadow: 0 0 10px rgba(217, 164, 65, 0.45);
+}
+
 /* Menu rows: staggered entrance, replays each time the menu opens. Rows start
    hidden and slide in one by one (CTA, music, language) — like the kasbah
    gate opening. */
