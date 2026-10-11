@@ -277,7 +277,7 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
             type="button"
             onClick={togglePlay}
             aria-label={playing ? dict.music.pause : dict.music.play}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gold text-black transition-transform hover:scale-105 active:scale-90"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold text-black transition-transform hover:scale-105 active:scale-90"
           >
             {playing ? (
               <Pause className="h-4 w-4" />

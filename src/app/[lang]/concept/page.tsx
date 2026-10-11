@@ -30,7 +30,7 @@ export default async function ConceptPage({
         badge={
           <a
             href={homePath}
-            className="inline-flex items-center gap-2 rounded-full border border-sand/25 bg-background/60 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sand/80 backdrop-blur-sm transition-colors hover:border-gold/60 hover:text-gold"
+            className="max-md:hidden inline-flex items-center gap-2 rounded-full border border-sand/25 bg-background/60 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sand/80 backdrop-blur-sm transition-colors hover:border-gold/60 hover:text-gold"
           >
             {dict.concept.backToTour}
           </a>
