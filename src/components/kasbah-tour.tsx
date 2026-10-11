@@ -443,7 +443,7 @@ export default function KasbahTour({
             <p className="text-[11px] md:text-xs tracking-[0.45em] uppercase text-gold/90 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)]">
               Un concept Terrevolution
             </p>
-            <h1 className="mt-4 text-6xl md:text-8xl font-bold tracking-tight drop-shadow-[0_2px_20px_rgba(0,0,0,0.85)]">
+            <h1 className="mt-4 text-6xl md:text-8xl font-bold tracking-tight font-display drop-shadow-[0_2px_20px_rgba(0,0,0,0.85)]">
               {dict.hero.title1}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-clay to-teal">
                 {dict.hero.title2}
