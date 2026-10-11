@@ -161,6 +161,15 @@ const en = {
     volume: "Volume",
     seek: "Seek",
   },
+  menu: {
+    label: "Menu",
+    open: "Open menu",
+    close: "Close",
+    ctaConcept: "Discover the concept",
+    ctaTour: "3D tour",
+    music: "Music",
+    language: "Language",
+  },
 };
 
 export type Messages = typeof en;

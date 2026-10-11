@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { AVAILABLE_LOCALES, isAvailableLocale, LOCALE_NAMES, type Locale } from "@/i18n/config";
+import { AVAILABLE_LOCALES, isAvailableLocale, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import HomeContent from "@/components/home-content";
 
@@ -15,5 +15,5 @@ export default async function LangHome({
   const { lang } = await params;
   if (!isAvailableLocale(lang)) notFound();
   const dict = await getDictionary(lang as Locale);
-  return <HomeContent dict={dict} locale={lang as Locale} localeName={LOCALE_NAMES[lang as Locale]} />;
+  return <HomeContent dict={dict} locale={lang as Locale} />;
 }

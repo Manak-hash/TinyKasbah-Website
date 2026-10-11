@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { AVAILABLE_LOCALES, isAvailableLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
-import MusicPlayer from "@/components/music-player";
+import SiteMenu from "@/components/site-menu";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,7 +58,7 @@ export default async function LangLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
-        <MusicPlayer dict={dict.music} />
+        <SiteMenu dict={dict} />
       </body>
     </html>
   );

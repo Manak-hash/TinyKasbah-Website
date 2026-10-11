@@ -163,6 +163,15 @@ const fr: Messages = {
     volume: "Volume",
     seek: "Position de lecture",
   },
+  menu: {
+    label: "Menu",
+    open: "Ouvrir le menu",
+    close: "Fermer",
+    ctaConcept: "Découvrir le concept",
+    ctaTour: "Visite 3D",
+    music: "Musique",
+    language: "Langue",
+  },
 };
 
 export default fr;

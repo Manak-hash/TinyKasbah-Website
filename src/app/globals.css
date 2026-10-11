@@ -39,6 +39,49 @@ body {
   border-radius: 999px 999px 24px 24px;
 }
 
+/* Menu trigger equalizer: three gold bars, paused = flat dim, playing = dance.
+   animation-play-state is driven inline from the component (playing state). */
+@keyframes eq-bounce {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+.eq-bar {
+  transform-origin: bottom;
+  animation: eq-bounce 0.9s ease-in-out infinite;
+}
+
+/* Menu rows: staggered entrance, replays each time the menu opens. Rows start
+   hidden and slide in one by one (CTA, music, language) — like the kasbah
+   gate opening. */
+.menu-stagger > * {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.menu-open .menu-stagger > * {
+  animation: menu-row-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.menu-open .menu-stagger > *:nth-child(1) { animation-delay: 0.04s; }
+.menu-open .menu-stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.menu-open .menu-stagger > *:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes menu-row-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-open .menu-stagger > * {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;

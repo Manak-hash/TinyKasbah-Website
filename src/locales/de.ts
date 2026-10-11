@@ -164,6 +164,15 @@ const de: Messages = {
     volume: "Lautstärke",
     seek: "Wiedergabeposition",
   },
+  menu: {
+    label: "Menü",
+    open: "Menü öffnen",
+    close: "Schließen",
+    ctaConcept: "Das Konzept entdecken",
+    ctaTour: "3D-Tour",
+    music: "Musik",
+    language: "Sprache",
+  },
 };
 
 export default de;

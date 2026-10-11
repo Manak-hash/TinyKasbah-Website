@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
-import { AVAILABLE_LOCALES, isAvailableLocale, LOCALE_NAMES, type Locale } from "@/i18n/config";
+import { AVAILABLE_LOCALES, isAvailableLocale, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import KasbahInterior from "@/components/kasbah-interior";
 import BrandMark from "@/components/brand-mark";
-import LanguageSwitcher from "@/components/language-switcher";
 
 export async function generateStaticParams() {
   return AVAILABLE_LOCALES.map((lang) => ({ lang }));
@@ -24,15 +23,6 @@ export default async function ConceptPage({
     <main className="zellige-bg relative h-dvh overflow-hidden" lang={lang}>
       {/* ---------- The whole page IS the free-explore 3D interior ---------- */}
       <KasbahInterior dict={dict} />
-
-      {/* ---------- Language switcher ---------- */}
-      <div className="absolute top-5 right-6 z-50">
-        <LanguageSwitcher
-          current={lang as Locale}
-          currentName={LOCALE_NAMES[lang as Locale]}
-          paths={{ fr: "/concept", en: "/en/concept", de: "/de/concept" }}
-        />
-      </div>
 
       {/* ---------- Brand + link back to the main page ---------- */}
       <BrandMark
