@@ -51,12 +51,20 @@ const FULL_CUT = -6;
 
 /** Camera viewpoints in RENDER space (raw minus HALL_CENTER). Every position
  *  is a scroll-tour waypoint that was validated collision-free. */
-const SPAWN = { pos: [-1.75, 1.55, -0.65], target: [0, 1.4, 0] } as const;
 const VIEWS = {
   amazigh: { pos: [-2.6, 1.6, -0.75], target: [-2.85, 1.3, 0.25] },
   sahraoui: { pos: [1.7, 1.6, -1.15], target: [1.8, 1.2, 0.7] },
   dome: { pos: [1.08, 1.15, -0.72], target: [0.1, 2.6, 0.1] },
   overview: { pos: [9.7, 12, -14.1], target: [-0.9, 0.5, -1.5] },
+} as const;
+
+/** Home/reset view: outside the main doors, "un portrait de côté" — the
+ *  camera ALSO starts here on page load (Canvas camera prop). Distance tuned
+ *  so one zoom-in step (or a pinch) brings you to the door. Render space =
+ *  raw minus HALL_CENTER; doors face west, offset right for 3/4 view. */
+const RESET_VIEW = {
+  pos: [-7.6, 2.0, 4.2],
+  target: [0.5, 1.2, -1.2],
 } as const;
 
 /** Camera height clamp in render space — the user never goes under the
@@ -341,9 +349,9 @@ function LoaderFallback({ dict }: { dict: Dictionary }) {
 }
 
 const pill =
-  "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-sand/20 bg-[#101312]/80 backdrop-blur-md px-3 py-1.5 text-[11px] text-sand/85 transition-colors hover:border-gold/60 hover:text-gold active:scale-95";
+  "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-sand/20 bg-[#101312]/80 backdrop-blur-md px-2 text-[10px] py-1.5 text-sand/85 transition-colors hover:border-gold/60 hover:text-gold active:scale-95 sm:px-3 sm:text-[11px]";
 const iconBtn =
-  "flex h-9 w-9 items-center justify-center rounded-full border border-sand/20 bg-[#101312]/80 backdrop-blur-md text-sand/85 transition-colors hover:border-gold/60 hover:text-gold active:scale-95";
+  "flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border border-sand/20 bg-[#101312]/80 backdrop-blur-md text-sand/85 transition-colors hover:border-gold/60 hover:text-gold active:scale-95";
 
 export default function KasbahInterior({ dict }: { dict: Dictionary }) {
   const [cut, setCut] = useState(0);
@@ -396,7 +404,7 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
     <div className="relative h-dvh w-full overflow-hidden bg-[#0d0f0e]">
       {webglOk ? (
         <Canvas
-          camera={{ position: [...SPAWN.pos] as [number, number, number], fov: 70, near: 0.05, far: 500 }}
+          camera={{ position: [...RESET_VIEW.pos] as [number, number, number], fov: 70, near: 0.05, far: 500 }}
           dpr={[1, 2]}
           gl={{ antialias: true, localClippingEnabled: true }}
           onPointerDown={() => setHintVisible(false)}
@@ -455,9 +463,12 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
         {dict.common.dragToExplore}
       </div>
 
-      {/* ---------- Central control dock (flat toolbar, bottom center) ---------- */}
-      <div className="absolute bottom-3 inset-x-2 z-40 flex justify-center">
-        <div className="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-2xl border border-sand/20 bg-[#101312]/85 px-2.5 py-2 backdrop-blur-md [scrollbar-width:none] md:gap-2 [&::-webkit-scrollbar]:hidden">
+      {/* ---------- Central control dock (flat toolbar, bottom center).
+          Fluid across breakpoints: tighter paddings + smaller hit areas under
+          sm, full labels from md up, slider widths scale with the viewport so
+          the dock never overflows on foldables / odd widths. ---------- */}
+      <div className="absolute bottom-2 sm:bottom-3 inset-x-1 sm:inset-x-2 z-40 flex justify-center">
+        <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border border-sand/20 bg-[#101312]/85 px-1.5 py-1.5 backdrop-blur-md [scrollbar-width:none] sm:px-2.5 sm:py-2 md:gap-2 [&::-webkit-scrollbar]:hidden">
           {/* Salons — each with its own color identity */}
           <button
             type="button"
@@ -487,13 +498,24 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
             <Mountain className="w-3.5 h-3.5 text-gold" aria-hidden />
             <span className="md:inline">{dict.controls.viewOverview}</span>
           </button>
+          {/* Reset: "back to start" — an arrow returning to its origin dot.
+              Distinct from the rotate arrows at a glance; tooltip spells it
+              out. */}
           <button
             type="button"
-            className={iconBtn}
+            className={`${iconBtn} group relative`}
             aria-label={dict.controls.resetView}
-            onClick={() => flyTo(SPAWN.pos, SPAWN.target)}
+            title={dict.controls.resetView}
+            onClick={() => flyTo(RESET_VIEW.pos, RESET_VIEW.target, 1600)}
           >
-            <RotateCcw className="w-4 h-4" aria-hidden />
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+              <path d="M18 3v4h-4" />
+              <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+            </svg>
+            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-sand/20 bg-[#101312]/95 px-2 py-0.5 text-[10px] text-sand/85 opacity-0 backdrop-blur transition-opacity group-hover:opacity-100">
+              {dict.controls.resetView}
+            </span>
           </button>
 
           <span className="h-6 w-px shrink-0 bg-sand/15" aria-hidden />
@@ -535,7 +557,7 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
                 setRingActive(false);
                 ringLast.current = 0;
               }}
-              className={`relative flex h-10 w-10 shrink-0 cursor-grab touch-none items-center justify-center rounded-full border-2 transition-colors active:cursor-grabbing ${
+              className={`relative flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 cursor-grab touch-none items-center justify-center rounded-full border-2 transition-colors active:cursor-grabbing ${
                 ringActive ? "border-gold" : "border-sand/25 hover:border-gold/60"
               }`}
             >
@@ -564,8 +586,9 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
 
           <span className="h-6 w-px shrink-0 bg-sand/15" aria-hidden />
 
-          {/* Sliders: cut + daylight, always in the dock on every device */}
-          <label className="flex shrink-0 items-center gap-1.5" title={dict.common.cutLabel}>
+          {/* Sliders: cut + daylight, always in the dock. Widths scale with
+              viewport (foldables/odd widths included) instead of fixed px. */}
+          <label className="flex shrink-0 items-center gap-1 sm:gap-1.5" title={dict.common.cutLabel}>
             <Scissors className="w-3.5 h-3.5 text-sand/40" aria-hidden />
             <input
               type="range"
@@ -574,10 +597,10 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
               value={cut}
               onChange={(e) => setCut(Number(e.target.value))}
               aria-label={dict.common.cutLabel}
-              className="menu-range w-20"
+              className="menu-range w-14 sm:w-20"
             />
           </label>
-          <label className="flex shrink-0 items-center gap-1.5" title={dict.common.daylightLabel}>
+          <label className="flex shrink-0 items-center gap-1 sm:gap-1.5" title={dict.common.daylightLabel}>
             <SunDim className="w-3.5 h-3.5 text-gold" aria-hidden />
             <span className="text-[10px] tabular-nums text-sand/60">{formatClock(time)}</span>
             <input
@@ -587,7 +610,7 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
               value={Math.round(time * 100)}
               onChange={(e) => setTime(Number(e.target.value) / 100)}
               aria-label={`${dict.common.timeLabel} — ${formatClock(time)}`}
-              className="menu-range w-24"
+              className="menu-range w-16 sm:w-24"
             />
           </label>
         </div>
