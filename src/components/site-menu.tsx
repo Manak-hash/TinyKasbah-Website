@@ -28,6 +28,13 @@ export const UI_PANEL_MENU = "menu";
 
 const LOCALES: Locale[] = ["fr", "en", "de"];
 
+// localStorage keys: the visitor's language choice and music state survive
+// page reloads and navigation.
+const LS_LOCALE = "ttk.locale";
+const LS_MUSIC_ON = "ttk.music.on";
+const LS_MUSIC_TIME = "ttk.music.time";
+const LS_VOLUME = "ttk.volume";
+
 // Broader than pointerdown/keydown alone: touch devices, scrolling, and
 // clicks on other controls all count as "the visitor is here".
 const INTERACTION_EVENTS = [
@@ -134,39 +141,81 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
   }, [open]);
 
   // Attempt autoplay on mount; fall back to the first interaction anywhere.
+  // Restored preferences: volume + music on/off + playback position come from
+  // localStorage, so "where did the user stop" survives reloads. A user who
+  // paused the music stays paused (no autoplay for them).
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = 0.4;
+
+    const savedVolume = Number(localStorage.getItem(LS_VOLUME));
+    const savedOn = localStorage.getItem(LS_MUSIC_ON);
+    const savedTime = Number(localStorage.getItem(LS_MUSIC_TIME));
+    const wantsMusic = savedOn === null ? true : savedOn === "1";
+    const effectiveVolume =
+      Number.isFinite(savedVolume) && savedVolume > 0 ? savedVolume : 0.4;
+    audio.volume = effectiveVolume;
+    // Defer the React state sync to a microtask: the effect body must stay
+    // setState-free (the DOM/audio element is the source of truth here).
+    Promise.resolve().then(() => setVolume(effectiveVolume));
 
     // preload="auto" can load metadata BEFORE React hydration attaches the
     // onLoadedMetadata handler — read the duration directly too.
     if (Number.isFinite(audio.duration)) setDuration(audio.duration);
+    const resume = () => {
+      if (Number.isFinite(savedTime) && savedTime > 1 && (!Number.isFinite(audio.duration) || savedTime < audio.duration - 1)) {
+        audio.currentTime = savedTime;
+      }
+    };
+    resume();
+    audio.addEventListener("loadedmetadata", resume, { once: true });
 
-    const onFirstInteraction = () => {
-      INTERACTION_EVENTS.forEach((ev) =>
-        window.removeEventListener(ev, onFirstInteraction),
-      );
+    const startPlayback = () => {
       audio
         .play()
         .then(() => setPlaying(true))
         .catch(() => undefined);
     };
 
-    audio
-      .play()
-      .then(() => setPlaying(true))
-      .catch(() => {
+    if (wantsMusic) {
+      const onFirstInteraction = () => {
         INTERACTION_EVENTS.forEach((ev) =>
-          window.addEventListener(ev, onFirstInteraction, { passive: true }),
+          window.removeEventListener(ev, onFirstInteraction),
         );
-      });
+        startPlayback();
+      };
+      audio
+        .play()
+        .then(() => setPlaying(true))
+        .catch(() => {
+          INTERACTION_EVENTS.forEach((ev) =>
+            window.addEventListener(ev, onFirstInteraction, { passive: true }),
+          );
+        });
+      return () => {
+        INTERACTION_EVENTS.forEach((ev) =>
+          window.removeEventListener(ev, onFirstInteraction),
+        );
+        audio.removeEventListener("loadedmetadata", resume);
+      };
+    }
 
-    return () => {
-      INTERACTION_EVENTS.forEach((ev) =>
-        window.removeEventListener(ev, onFirstInteraction),
-      );
+    return () => audio.removeEventListener("loadedmetadata", resume);
+  }, []);
+
+  // Persist music state: on/off + position (throttled by timeupdate events).
+  useEffect(() => {
+    localStorage.setItem(LS_MUSIC_ON, playing ? "1" : "0");
+  }, [playing]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onTimeUpdate = () => {
+      localStorage.setItem(LS_MUSIC_TIME, String(Math.floor(audio.currentTime)));
     };
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    return () => audio.removeEventListener("timeupdate", onTimeUpdate);
   }, []);
 
   const togglePlay = useCallback(() => {
@@ -195,6 +244,7 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
     if (!audio) return;
     audio.volume = v;
     setVolume(v);
+    localStorage.setItem(LS_VOLUME, String(v));
     if (v === 0 && !audio.muted) {
       audio.muted = true;
       setMuted(true);
@@ -351,7 +401,13 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
                 <Link
                   key={loc}
                   href={pathFor(loc)}
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    // localStorage drives nothing server-side; the cookie is
+                    // what the middleware reads on the next visit to /.
+                    localStorage.setItem(LS_LOCALE, loc);
+                    document.cookie = `ttk.locale=${loc}; path=/; max-age=31536000; samesite=lax`;
+                    setOpen(false);
+                  }}
                   className={`flex min-h-11 items-center justify-between rounded-lg px-3 text-xs transition-colors active:bg-white/10 ${
                     loc === locale
                       ? "bg-gold/15 font-medium text-gold"

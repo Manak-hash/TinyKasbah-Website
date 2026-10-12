@@ -21,6 +21,7 @@ const de: Messages = {
   },
   hero: {
     badge: "Bald, ein Konzept von Terrevolution",
+    kicker: "Ein Konzept von Terrevolution",
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:

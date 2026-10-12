@@ -10,7 +10,8 @@ const nextConfig: NextConfig = {
   // /concept only existed to redirect to the default locale. A server-level
   // redirect avoids the static redirect page whose mount triggered the
   // "ConceptRootPage cannot have a negative time stamp" performance.measure
-  // error in dev.
+  // error in dev. Same story for the root / redirect (RootPage) — the bare /
+  // is negotiated by middleware instead (saved locale cookie -> /fr /en /de).
   async redirects() {
     return [{ source: "/concept", destination: "/fr/concept", permanent: false }];
   },

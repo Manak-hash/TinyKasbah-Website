@@ -20,6 +20,7 @@ const fr: Messages = {
   },
   hero: {
     badge: "Bientôt, un concept Terrevolution",
+    kicker: "Un concept Terrevolution",
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:

@@ -18,6 +18,7 @@ const en = {
   },
   hero: {
     badge: "Coming soon, a Terrevolution concept",
+    kicker: "A Terrevolution concept",
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:
