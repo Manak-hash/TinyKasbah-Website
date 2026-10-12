@@ -150,6 +150,7 @@ const de: Messages = {
     viewDome: "Unter der Kuppel",
     viewOverview: "Übersicht",
     resetView: "Ansicht zurücksetzen",
+    resetViewShort: "Start",
     zoomIn: "Vergrößern",
     zoomOut: "Verkleinern",
     rotateLeft: "Nach links drehen",

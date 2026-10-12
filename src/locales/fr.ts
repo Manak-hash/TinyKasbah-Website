@@ -149,6 +149,7 @@ const fr: Messages = {
     viewDome: "Sous la coupole",
     viewOverview: "Vue d'ensemble",
     resetView: "Réinitialiser la vue",
+    resetViewShort: "Début",
     zoomIn: "Zoom avant",
     zoomOut: "Zoom arrière",
     rotateLeft: "Pivoter à gauche",

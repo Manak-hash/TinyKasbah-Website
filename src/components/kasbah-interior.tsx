@@ -58,13 +58,14 @@ const VIEWS = {
   overview: { pos: [9.7, 12, -14.1], target: [-0.9, 0.5, -1.5] },
 } as const;
 
-/** Home/reset view: outside the main doors, "un portrait de côté" — the
- *  camera ALSO starts here on page load (Canvas camera prop). Distance tuned
- *  so one zoom-in step (or a pinch) brings you to the door. Render space =
- *  raw minus HALL_CENTER; doors face west, offset right for 3/4 view. */
+/** Home/reset view: outside the main doors with the door itself at the
+ *  CENTER of the frame, camera offset to the right (south) for the
+ *  "portrait de côté" 3/4 read. The camera STARTS here on page load
+ *  (Canvas camera prop) and the reset button returns here. Render space =
+ *  raw minus HALL_CENTER; door/vestibule render ≈ X -5..-3, Z -2..-1.4. */
 const RESET_VIEW = {
-  pos: [-7.6, 2.0, 4.2],
-  target: [0.5, 1.2, -1.2],
+  pos: [-7.2, 2.0, 3.8],
+  target: [-3.2, 1.3, -1.3],
 } as const;
 
 /** Camera height clamp in render space — the user never goes under the
@@ -464,11 +465,11 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
       </div>
 
       {/* ---------- Central control dock (flat toolbar, bottom center).
-          Fluid across breakpoints: tighter paddings + smaller hit areas under
-          sm, full labels from md up, slider widths scale with the viewport so
-          the dock never overflows on foldables / odd widths. ---------- */}
+          FULLY VISIBLE at every width — no horizontal scrolling (a hidden
+          scrollable toolbar is undiscoverable). Everything wraps onto up to
+          three centered rows on narrow screens; wide screens get one row. ---------- */}
       <div className="absolute bottom-2 sm:bottom-3 inset-x-1 sm:inset-x-2 z-40 flex justify-center">
-        <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border border-sand/20 bg-[#101312]/85 px-1.5 py-1.5 backdrop-blur-md [scrollbar-width:none] sm:px-2.5 sm:py-2 md:gap-2 [&::-webkit-scrollbar]:hidden">
+        <div className="flex max-w-full flex-wrap items-center justify-center gap-1 rounded-2xl border border-sand/20 bg-[#101312]/85 px-1.5 py-1.5 backdrop-blur-md sm:px-2.5 sm:py-2 md:gap-1.5">
           {/* Salons — each with its own color identity */}
           <button
             type="button"
@@ -498,24 +499,20 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
             <Mountain className="w-3.5 h-3.5 text-gold" aria-hidden />
             <span className="md:inline">{dict.controls.viewOverview}</span>
           </button>
-          {/* Reset: "back to start" — an arrow returning to its origin dot.
-              Distinct from the rotate arrows at a glance; tooltip spells it
-              out. */}
+          {/* Reset: wide pill with door icon + WORD — no icon-guessing for
+              less pointer-savvy visitors. The door = the front-door view. */}
           <button
             type="button"
-            className={`${iconBtn} group relative`}
-            aria-label={dict.controls.resetView}
-            title={dict.controls.resetView}
             onClick={() => flyTo(RESET_VIEW.pos, RESET_VIEW.target, 1600)}
+            title={dict.controls.resetView}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-sand/20 bg-[#101312]/80 px-2 py-1.5 text-[10px] text-sand/85 backdrop-blur-md transition-colors hover:border-gold/60 hover:text-gold active:scale-95 sm:px-3 sm:text-[11px]"
           >
+            {/* kasbah door glyph: horseshoe arch in a wall */}
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M20 12a8 8 0 1 1-2.34-5.66" />
-              <path d="M18 3v4h-4" />
-              <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 21v-7a3 3 0 0 1 6 0v7" />
             </svg>
-            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-sand/20 bg-[#101312]/95 px-2 py-0.5 text-[10px] text-sand/85 opacity-0 backdrop-blur transition-opacity group-hover:opacity-100">
-              {dict.controls.resetView}
-            </span>
+            <span>{dict.controls.resetViewShort}</span>
           </button>
 
           <span className="h-6 w-px shrink-0 bg-sand/15" aria-hidden />

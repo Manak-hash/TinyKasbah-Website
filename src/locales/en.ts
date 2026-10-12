@@ -147,6 +147,7 @@ const en = {
     viewDome: "Under the dome",
     viewOverview: "Overview",
     resetView: "Reset view",
+    resetViewShort: "Start",
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     rotateLeft: "Rotate left",
