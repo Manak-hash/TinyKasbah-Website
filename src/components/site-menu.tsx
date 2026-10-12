@@ -76,6 +76,7 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   // ----- audio state -----
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -124,19 +125,35 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
   const langShown = open && langOpen;
 
   // Any interaction outside the menu closes it: click, wheel/scroll, or
-  // touch-drag. Events targeting the menu itself (wrapRef) are ignored so
-  // using the sliders never dismisses the menu.
+  // touch-drag. Events targeting the menu (wrapRef = trigger + desktop
+  // dropdown, sheetRef = mobile top sheet) are ignored, so using the
+  // sliders never dismisses the menu. Touch drags are only closed on when
+  // they START outside: a touchmove whose target is already inside is a
+  // slider interaction and must never close.
   useEffect(() => {
     if (!open) return;
-    const outside = (e: Event) =>
-      !wrapRef.current?.contains(e.target as Node) && setOpen(false);
-    document.addEventListener("mousedown", outside);
-    window.addEventListener("wheel", outside, { passive: true });
-    window.addEventListener("touchmove", outside, { passive: true });
+    const inside = (t: EventTarget | null) =>
+      wrapRef.current?.contains(t as Node) ||
+      sheetRef.current?.contains(t as Node);
+    const onPointerOutside = (e: Event) => {
+      if (!inside(e.target)) setOpen(false);
+    };
+    let touchStartedInside = false;
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartedInside = !!inside(e.target);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!touchStartedInside && !inside(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerOutside);
+    window.addEventListener("wheel", onPointerOutside, { passive: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
     return () => {
-      document.removeEventListener("mousedown", outside);
-      window.removeEventListener("wheel", outside);
-      window.removeEventListener("touchmove", outside);
+      document.removeEventListener("mousedown", onPointerOutside);
+      window.removeEventListener("wheel", onPointerOutside);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
     };
   }, [open]);
 
@@ -490,11 +507,10 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
           role="dialog"
           aria-modal="false"
           aria-label={dict.menu.label}
-          inert={!open}
           className={`absolute top-[3.4rem] right-0 hidden w-80 origin-top rounded-2xl border border-sand/15 bg-[#141715]/95 p-5 shadow-2xl backdrop-blur transition-all duration-300 md:block ${
             open
               ? "translate-y-0 scale-100 opacity-100"
-              : "-translate-y-1 scale-[0.98] opacity-0"
+              : "-translate-y-1 scale-[0.98] opacity-0 pointer-events-none"
           }`}
         >
           {menuContent}
@@ -504,10 +520,10 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
       {/* Mobile: top sheet dropping from under the trigger. Not full-screen —
           the 3D scene stays visible below; drag/tap the handle to close. */}
       <div
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         aria-label={dict.menu.label}
-        inert={!open}
         className={`fixed inset-x-0 top-0 z-[60] md:hidden ${
           open ? "menu-open" : "pointer-events-none"
         }`}
