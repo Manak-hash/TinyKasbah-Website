@@ -151,6 +151,9 @@ const fr: Messages = {
     resetView: "Réinitialiser la vue",
     zoomIn: "Zoom avant",
     zoomOut: "Zoom arrière",
+    rotateLeft: "Pivoter à gauche",
+    rotateRight: "Pivoter à droite",
+    rotateDrag: "Glisser pour pivoter",
   },
   music: {
     title: "Ambiance : musique de thé marocaine",

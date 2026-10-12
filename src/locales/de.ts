@@ -145,13 +145,16 @@ const de: Messages = {
     partenaire: "Architekt",
   },
   controls: {
-    viewAmazigh: "Salon Amazigh",
-    viewSahraoui: "Salon Sahraoui",
+    viewAmazigh: "Amazigh-Salon",
+    viewSahraoui: "Sahraoui-Salon",
     viewDome: "Unter der Kuppel",
     viewOverview: "Übersicht",
     resetView: "Ansicht zurücksetzen",
     zoomIn: "Vergrößern",
     zoomOut: "Verkleinern",
+    rotateLeft: "Nach links drehen",
+    rotateRight: "Nach rechts drehen",
+    rotateDrag: "Ziehen zum Drehen",
   },
   music: {
     title: "Ambiente: marokkanische Teemusik",

@@ -149,6 +149,9 @@ const en = {
     resetView: "Reset view",
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
+    rotateLeft: "Rotate left",
+    rotateRight: "Rotate right",
+    rotateDrag: "Drag to rotate",
   },
   music: {
     title: "Ambiance: Moroccan tea music",

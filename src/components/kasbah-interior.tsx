@@ -3,8 +3,9 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import type { Group } from "three";
-import { Box3, Color, Plane, Vector3 } from "three";
+import { Box3, Color, Plane, Spherical, Vector3 } from "three";
 import { Html, MapControls, useGLTF } from "@react-three/drei";
+import * as THREE from "three";
 import {
   Loader2,
   Move3d,
@@ -14,6 +15,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
+  RotateCw,
   Armchair,
   Tent,
   Mountain,
@@ -51,15 +53,21 @@ const FULL_CUT = -6;
  *  is a scroll-tour waypoint that was validated collision-free. */
 const SPAWN = { pos: [-1.75, 1.55, -0.65], target: [0, 1.4, 0] } as const;
 const VIEWS = {
-  amazigh: { pos: [-1.42, 1.55, -0.4], target: [-2.85, 1.3, 0.25] },
-  sahraoui: { pos: [1.08, 1.55, -0.72], target: [1.8, 1.2, 0.7] },
-  dome: { pos: [1.08, 1.55, -0.72], target: [0.1, 2.8, 0.1] },
+  amazigh: { pos: [-2.6, 1.6, -0.75], target: [-2.85, 1.3, 0.25] },
+  sahraoui: { pos: [1.7, 1.6, -1.15], target: [1.8, 1.2, 0.7] },
+  dome: { pos: [1.08, 1.15, -0.72], target: [0.1, 2.6, 0.1] },
   overview: { pos: [9.7, 12, -14.1], target: [-0.9, 0.5, -1.5] },
 } as const;
+
+/** Camera height clamp in render space — the user never goes under the
+ *  floor or above the roofline while orbiting/panning. */
+const MIN_CAM_Y = 0.35;
+const MAX_CAM_Y = 6.5;
 
 type Vec3 = readonly [number, number, number];
 type ViewRequest = { pos: Vec3; target: Vec3; duration: number; seq: number };
 type ZoomRequest = { factor: number; seq: number };
+type RotateRequest = { delta: number; seq: number };
 
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const lerp3 = (a: Vec3, b: Vec3, f: number): [number, number, number] => [
@@ -145,11 +153,24 @@ function Model({ url }: { url: string }) {
   const centered = useRef(false);
 
   useEffect(() => {
-    if (centered.current || !group.current) return;
-    centered.current = true;
-    // Floor at Y=0, hall center of the floor plan at XZ origin.
-    const box = new Box3().setFromObject(scene);
-    group.current.position.set(-HALL_CENTER[0], -box.min.y, -HALL_CENTER[1]);
+    if (!group.current) return;
+    if (!centered.current) {
+      centered.current = true;
+      // Floor at Y=0, hall center of the floor plan at XZ origin.
+      const box = new Box3().setFromObject(scene);
+      group.current.position.set(-HALL_CENTER[0], -box.min.y, -HALL_CENTER[1]);
+    }
+    // The home tour's HeroDim ghosts these SAME cached GLB materials
+    // (transparent + opacity 0.18) and three's module-level cache shares
+    // them across pages. Navigating home -> /concept must restore full
+    // opacity or the interior renders see-through until a hard refresh.
+    scene.traverse((obj) => {
+      const mesh = obj as { material?: { opacity?: number; transparent?: boolean } };
+      if (mesh.material) {
+        mesh.material.opacity = 1;
+        mesh.material.transparent = false;
+      }
+    });
   }, [scene]);
 
   return (
@@ -184,16 +205,20 @@ function SectionCut({ cut }: { cut: number }) {
 function CameraRig({
   viewReq,
   zoomReq,
+  rotateReq,
 }: {
   viewReq: ViewRequest | null;
   zoomReq: ZoomRequest | null;
+  rotateReq: RotateRequest | null;
 }) {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls) as React.ComponentRef<typeof MapControls> | null;
   const flight = useRef<{ fromPos: Vector3; toPos: Vec3; fromTarget: Vector3; toTarget: Vec3; t0: number; duration: number } | null>(null);
   const zoom = useRef<{ from: number; to: number; t0: number } | null>(null);
+  const orbit = useRef<{ remaining: number; step: number } | null>(null);
   const lastViewSeq = useRef(0);
   const lastZoomSeq = useRef(0);
+  const lastRotateSeq = useRef(0);
 
   // New flight request — capture live camera state as the start point
   useEffect(() => {
@@ -218,18 +243,49 @@ function CameraRig({
     zoom.current = { from: dist, to: clamped, t0: performance.now() };
   }, [zoomReq, controls, camera]);
 
+  // New orbit request — dolly around the target at ~120°/s, animated per frame
+  useEffect(() => {
+    if (!rotateReq || rotateReq.seq === lastRotateSeq.current) return;
+    lastRotateSeq.current = rotateReq.seq;
+    orbit.current = { remaining: rotateReq.delta, step: rotateReq.delta };
+  }, [rotateReq]);
+
   // User grab cancels any in-flight animation
   useEffect(() => {
     if (!controls) return;
     const cancel = () => {
       flight.current = null;
       zoom.current = null;
+      orbit.current = null;
     };
     controls.addEventListener("start", cancel);
     return () => controls.removeEventListener("start", cancel);
   }, [controls]);
 
+  // Height clamp: whatever the controls do, the camera never dips under the
+  // floor plane or over the roofline.
   useFrame(() => {
+    if (orbit.current && controls) {
+      const o = orbit.current;
+      const step = Math.sign(o.remaining) * Math.min(Math.abs(o.step) / 60, Math.abs(o.remaining));
+      const offset = camera.position.clone().sub(controls.target);
+      const spherical = new Spherical().setFromVector3(offset);
+      spherical.theta -= step;
+      offset.setFromSpherical(spherical);
+      camera.position.copy(controls.target).add(offset);
+      controls.update();
+      o.remaining -= step;
+      if (Math.abs(o.remaining) < 0.0005) orbit.current = null;
+    }
+
+    if (camera.position.y < MIN_CAM_Y) {
+      camera.position.y = MIN_CAM_Y;
+      controls?.update();
+    } else if (camera.position.y > MAX_CAM_Y) {
+      camera.position.y = MAX_CAM_Y;
+      controls?.update();
+    }
+
     if (flight.current && controls) {
       const f = flight.current;
       const t = Math.min(1, (performance.now() - f.t0) / f.duration);
@@ -295,7 +351,9 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
   const [webglOk, setWebglOk] = useState(true);
   const [viewReq, setViewReq] = useState<ViewRequest | null>(null);
   const [zoomReq, setZoomReq] = useState<ZoomRequest | null>(null);
+  const [rotateReq, setRotateReq] = useState<RotateRequest | null>(null);
   const [hintVisible, setHintVisible] = useState(true);
+  const [ringActive, setRingActive] = useState(false);
   const seq = useRef(0);
 
   const cutValue = NO_CUT - (cut / 100) * (NO_CUT - FULL_CUT);
@@ -310,6 +368,28 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
     setHintVisible(false);
     seq.current += 1;
     setZoomReq({ factor, seq: seq.current });
+  };
+
+  const doRotate = (delta: number) => {
+    setHintVisible(false);
+    seq.current += 1;
+    setRotateReq({ delta, seq: seq.current });
+  };
+
+  // Drag ring: pointer angle around the ring center -> continuous orbit.
+  const ringRef = useRef<HTMLDivElement>(null);
+  const ringLast = useRef(0);
+  const onRingMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!ringActive || !ringRef.current) return;
+    const r = ringRef.current.getBoundingClientRect();
+    const angle = Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
+    if (ringLast.current !== 0) {
+      let d = angle - ringLast.current;
+      if (d > Math.PI) d -= Math.PI * 2;
+      if (d < -Math.PI) d += Math.PI * 2;
+      doRotate(d);
+    }
+    ringLast.current = angle;
   };
 
   return (
@@ -350,8 +430,13 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
             maxDistance={38}
             maxPolarAngle={Math.PI / 2.02}
             target={[0, 1.4, 0]}
+            // Industry-standard mapping: left-drag = ROTATE (the gesture
+            // people expect everywhere), right-drag / shift+drag = pan,
+            // wheel/pinch = dolly. One finger rotates, two pan + pinch.
+            mouseButtons={{ LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }}
+            touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
           />
-          <CameraRig viewReq={viewReq} zoomReq={zoomReq} />
+          <CameraRig viewReq={viewReq} zoomReq={zoomReq} rotateReq={rotateReq} />
           <SectionCut cut={cutValue} />
         </Canvas>
       ) : (
@@ -362,7 +447,7 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
 
       {/* Interaction hint — fades on first touch */}
       <div
-        className={`pointer-events-none absolute bottom-32 left-1/2 -translate-x-1/2 md:bottom-8 z-30 flex items-center gap-2 text-[10px] tracking-[0.25em] uppercase text-sand/45 transition-opacity duration-700 ${
+        className={`pointer-events-none absolute bottom-40 md:bottom-28 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 text-[10px] tracking-[0.25em] uppercase text-sand/45 transition-opacity duration-700 ${
           hintVisible ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -370,108 +455,142 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
         {dict.common.dragToExplore}
       </div>
 
-      {/* Viewpoint presets — scrollable pill row on mobile, docked bottom-left on desktop */}
-      <div className="absolute bottom-4 inset-x-3 md:inset-x-auto md:left-6 z-40">
-        <div className="flex gap-2 overflow-x-auto md:overflow-visible py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <button type="button" className={pill} onClick={() => flyTo(VIEWS.amazigh.pos, VIEWS.amazigh.target)}>
-            <Armchair className="w-3.5 h-3.5 text-gold" aria-hidden />
+      {/* ---------- Central control dock (flat toolbar, bottom center) ---------- */}
+      <div className="absolute bottom-3 inset-x-2 z-40 flex justify-center">
+        <div className="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-2xl border border-sand/20 bg-[#101312]/85 px-2.5 py-2 backdrop-blur-md [scrollbar-width:none] md:gap-2 [&::-webkit-scrollbar]:hidden">
+          {/* Salons — each with its own color identity */}
+          <button
+            type="button"
+            onClick={() => flyTo(VIEWS.amazigh.pos, VIEWS.amazigh.target)}
+            className={`${pill} !border-[#d9a441]/50 !bg-[#d9a441]/10 !text-[#e8b54b] hover:!border-[#d9a441]`}
+          >
+            <Armchair className="w-3.5 h-3.5" aria-hidden />
             {dict.controls.viewAmazigh}
           </button>
-          <button type="button" className={pill} onClick={() => flyTo(VIEWS.sahraoui.pos, VIEWS.sahraoui.target)}>
-            <Tent className="w-3.5 h-3.5 text-gold" aria-hidden />
+          <button
+            type="button"
+            onClick={() => flyTo(VIEWS.sahraoui.pos, VIEWS.sahraoui.target)}
+            className={`${pill} !border-[#c96f3b]/60 !bg-[#c96f3b]/12 !text-[#e0956b] hover:!border-[#c96f3b]`}
+          >
+            <Tent className="w-3.5 h-3.5" aria-hidden />
             {dict.controls.viewSahraoui}
           </button>
+
+          <span className="h-6 w-px shrink-0 bg-sand/15" aria-hidden />
+
+          {/* Coupole + overview — neutral dock styling */}
           <button type="button" className={pill} onClick={() => flyTo(VIEWS.dome.pos, VIEWS.dome.target)}>
             <Sun className="w-3.5 h-3.5 text-gold" aria-hidden />
             {dict.controls.viewDome}
           </button>
           <button type="button" className={pill} onClick={() => flyTo(VIEWS.overview.pos, VIEWS.overview.target, 1800)}>
             <Mountain className="w-3.5 h-3.5 text-gold" aria-hidden />
-            {dict.controls.viewOverview}
+            <span className="md:inline">{dict.controls.viewOverview}</span>
           </button>
           <button
             type="button"
-            className={pill}
+            className={iconBtn}
             aria-label={dict.controls.resetView}
             onClick={() => flyTo(SPAWN.pos, SPAWN.target)}
           >
-            <RotateCcw className="w-3.5 h-3.5 text-sand/60" aria-hidden />
-            <span className="md:hidden">{dict.controls.resetView}</span>
+            <RotateCcw className="w-4 h-4" aria-hidden />
           </button>
+
+          <span className="h-6 w-px shrink-0 bg-sand/15" aria-hidden />
+
+          {/* Rotate: orbit buttons + drag ring for fine control */}
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              className={iconBtn}
+              aria-label={dict.controls.rotateLeft}
+              onClick={() => doRotate(-Math.PI / 3)}
+            >
+              <RotateCcw className="w-4 h-4" aria-hidden />
+            </button>
+            <div
+              ref={ringRef}
+              role="slider"
+              aria-label={dict.controls.rotateDrag}
+              aria-valuemin={0}
+              aria-valuemax={360}
+              aria-valuenow={0}
+              tabIndex={0}
+              onPointerDown={(e) => {
+                e.currentTarget.setPointerCapture(e.pointerId);
+                setRingActive(true);
+                setHintVisible(false);
+                const r = e.currentTarget.getBoundingClientRect();
+                ringLast.current = Math.atan2(
+                  e.clientY - (r.top + r.height / 2),
+                  e.clientX - (r.left + r.width / 2),
+                );
+              }}
+              onPointerMove={onRingMove}
+              onPointerUp={() => {
+                setRingActive(false);
+                ringLast.current = 0;
+              }}
+              onPointerCancel={() => {
+                setRingActive(false);
+                ringLast.current = 0;
+              }}
+              className={`relative flex h-10 w-10 shrink-0 cursor-grab touch-none items-center justify-center rounded-full border-2 transition-colors active:cursor-grabbing ${
+                ringActive ? "border-gold" : "border-sand/25 hover:border-gold/60"
+              }`}
+            >
+              <span className="absolute top-1/2 left-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold" />
+              <Move3d className="w-4 h-4 text-sand/70" aria-hidden />
+            </div>
+            <button
+              type="button"
+              className={iconBtn}
+              aria-label={dict.controls.rotateRight}
+              onClick={() => doRotate(Math.PI / 3)}
+            >
+              <RotateCw className="w-4 h-4" aria-hidden />
+            </button>
+          </div>
+
+          <span className="h-6 w-px shrink-0 bg-sand/15" aria-hidden />
+
+          {/* Zoom */}
+          <button type="button" className={iconBtn} aria-label={dict.controls.zoomIn} onClick={() => doZoom(0.72)}>
+            <ZoomIn className="w-4 h-4" aria-hidden />
+          </button>
+          <button type="button" className={iconBtn} aria-label={dict.controls.zoomOut} onClick={() => doZoom(1.38)}>
+            <ZoomOut className="w-4 h-4" aria-hidden />
+          </button>
+
+          <span className="h-6 w-px shrink-0 bg-sand/15" aria-hidden />
+
+          {/* Sliders: cut + daylight, always in the dock on every device */}
+          <label className="flex shrink-0 items-center gap-1.5" title={dict.common.cutLabel}>
+            <Scissors className="w-3.5 h-3.5 text-sand/40" aria-hidden />
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={cut}
+              onChange={(e) => setCut(Number(e.target.value))}
+              aria-label={dict.common.cutLabel}
+              className="menu-range w-20"
+            />
+          </label>
+          <label className="flex shrink-0 items-center gap-1.5" title={dict.common.daylightLabel}>
+            <SunDim className="w-3.5 h-3.5 text-gold" aria-hidden />
+            <span className="text-[10px] tabular-nums text-sand/60">{formatClock(time)}</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(time * 100)}
+              onChange={(e) => setTime(Number(e.target.value) / 100)}
+              aria-label={`${dict.common.timeLabel} — ${formatClock(time)}`}
+              className="menu-range w-24"
+            />
+          </label>
         </div>
-      </div>
-
-      {/* Zoom — right edge, above the mobile slider / beside the desktop one */}
-      <div className="absolute right-4 md:right-6 bottom-40 md:bottom-10 z-40 flex flex-col gap-2">
-        <button type="button" className={iconBtn} aria-label={dict.controls.zoomIn} onClick={() => doZoom(0.72)}>
-          <ZoomIn className="w-4 h-4" aria-hidden />
-        </button>
-        <button type="button" className={iconBtn} aria-label={dict.controls.zoomOut} onClick={() => doZoom(1.38)}>
-          <ZoomOut className="w-4 h-4" aria-hidden />
-        </button>
-      </div>
-
-      {/* Roof-cut slider — horizontal above presets on touch, vertical right edge on desktop */}
-      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 flex md:hidden items-center gap-3 w-56">
-        <Scissors className="w-4 h-4 text-sand/40 shrink-0" aria-hidden />
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={cut}
-          onChange={(e) => setCut(Number(e.target.value))}
-          aria-label={dict.common.cutLabel}
-          className="w-full accent-[#d9a441]"
-        />
-      </div>
-      {/* Cut slider — vertical right edge. Anchored from the TOP at a fixed
-          offset that clears the daylight slider column above it (daylight
-          ends ~264px: top-72 = 288px start). top-1/2 made both columns
-          collide on viewports under ~770px tall. */}
-      <div className="absolute right-6 top-72 z-40 hidden md:flex flex-col items-center gap-3">
-        <Scissors className="w-4 h-4 text-sand/40 shrink-0" aria-hidden />
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={cut}
-          onChange={(e) => setCut(Number(e.target.value))}
-          aria-label={dict.common.cutLabel}
-          className="h-44 w-auto accent-[#d9a441] [writing-mode:vertical-lr] [direction:rtl]"
-        />
-      </div>
-
-      {/* Daylight study — stacked under the cut slider on touch, vertical
-          right edge above the cut slider on desktop */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-40 flex md:hidden flex-col items-center gap-1.5 w-56">
-        <span className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-sand/50">
-          <SunDim className="w-3.5 h-3.5 text-gold" aria-hidden />
-          {dict.common.daylightLabel} · {formatClock(time)}
-        </span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={Math.round(time * 100)}
-          onChange={(e) => setTime(Number(e.target.value) / 100)}
-          aria-label={`${dict.common.timeLabel} — ${formatClock(time)}`}
-          className="w-full accent-[#d9a441]"
-        />
-      </div>
-      <div className="absolute right-6 top-16 z-40 hidden md:flex flex-col items-center gap-2">
-        <span className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-sand/50 [writing-mode:vertical-lr]">
-          <SunDim className="w-3.5 h-3.5 rotate-90 text-gold" aria-hidden />
-          {formatClock(time)}
-        </span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={Math.round(time * 100)}
-          onChange={(e) => setTime(Number(e.target.value) / 100)}
-          aria-label={`${dict.common.timeLabel} — ${formatClock(time)}`}
-          className="h-44 w-auto accent-[#d9a441] [writing-mode:vertical-lr] [direction:rtl]"
-        />
       </div>
     </div>
   );
