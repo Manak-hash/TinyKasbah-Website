@@ -64,8 +64,8 @@ const VIEWS = {
  *  (Canvas camera prop) and the reset button returns here. Render space =
  *  raw minus HALL_CENTER; door/vestibule render ≈ X -5..-3, Z -2..-1.4. */
 const RESET_VIEW = {
-  pos: [-7.2, 2.0, 3.8],
-  target: [-3.2, 1.3, -1.3],
+  pos: [-4.13, 2.16, 5.09],
+  target: [1.84, 1.4, -0.43],
 } as const;
 
 /** Camera height clamp in render space — the user never goes under the
