@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import type { Group } from "three";
 import { Box3, Color, Plane, Spherical, Vector3 } from "three";
@@ -362,7 +362,8 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
   const [zoomReq, setZoomReq] = useState<ZoomRequest | null>(null);
   const [rotateReq, setRotateReq] = useState<RotateRequest | null>(null);
   const [hintVisible, setHintVisible] = useState(true);
-  const [ringActive, setRingActive] = useState(false);
+  const [joyActive, setJoyActive] = useState(false);
+  const [joyKnob, setJoyKnob] = useState({ x: 0, y: 0 });
   const seq = useRef(0);
 
   const cutValue = NO_CUT - (cut / 100) * (NO_CUT - FULL_CUT);
@@ -379,51 +380,66 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
     setZoomReq({ factor, seq: seq.current });
   };
 
-  const doRotate = (delta: number) => {
+  const doRotate = useCallback((delta: number) => {
     setHintVisible(false);
     seq.current += 1;
     setRotateReq({ delta, seq: seq.current });
-  };
+  }, []);
 
-  // Drag ring: pointer angle around the ring center -> continuous orbit.
-  // Robustness for pads + touch:
-  // - track the PREVIOUS pointer position instead of absolute angles: near
-  //   the ring center (finger on a small ring) atan2 angles jump wildly.
-  // - accumulate tiny deltas (pad micro-moves) and only apply above a
-  //   threshold, so jitter doesn't spin the camera.
-  // - movement is applied relative to the ring radius: drags measured at the
-  //   ring edge and at the center produce the same rotation speed.
-  const ringRef = useRef<HTMLDivElement>(null);
-  const ringLast = useRef<{ x: number; y: number } | null>(null);
-  const ringAccum = useRef(0);
-  const onRingMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!ringActive || !ringRef.current || !ringLast.current) return;
-    const r = ringRef.current.getBoundingClientRect();
+  // Joystick rotate: hold and drag the knob inside the pad — the offset of
+  // the pointer from the pad center maps to a continuous orbit speed and
+  // direction (left = rotate left, right = rotate right). Works identically
+  // for mouse, pad and touch because it only cares about the offset vector,
+  // not gesture precision: no angles, no jitter, no dead zones.
+  const padRef = useRef<HTMLDivElement>(null);
+  const joyFrame = useRef<number | null>(null);
+  const joyVector = useRef({ x: 0, y: 0 });
+  const joyActiveRef = useRef(false);
+
+  const stopJoystick = useCallback(() => {
+    joyActiveRef.current = false;
+    setJoyActive(false);
+    joyVector.current = { x: 0, y: 0 };
+    if (joyFrame.current !== null) {
+      cancelAnimationFrame(joyFrame.current);
+      joyFrame.current = null;
+    }
+    setJoyKnob({ x: 0, y: 0 });
+  }, []);
+
+  const runJoystick = useCallback(() => {
+    // rAF loop: orbit continuously while the knob is held off-center.
+    // Speed ramps with offset distance; capped at ~90°/s.
+    const tick = () => {
+      if (!joyActiveRef.current) return;
+      const { x, y } = joyVector.current;
+      const mag = Math.min(1, Math.hypot(x, y));
+      if (mag > 0.12) {
+        // horizontal offset drives orbit; vertical offset (n/y) ignored for
+        // orbit — the height clamp already protects the vertical axis.
+        const speed = Math.sign(x) * mag * mag * 0.026; // rad per frame @60fps
+        doRotate(speed);
+      }
+      joyFrame.current = requestAnimationFrame(tick);
+    };
+    if (joyFrame.current === null) joyFrame.current = requestAnimationFrame(tick);
+  }, [doRotate]);
+
+  const onPadMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!joyActiveRef.current || !padRef.current) return;
+    const r = padRef.current.getBoundingClientRect();
     const cx = r.left + r.width / 2;
     const cy = r.top + r.height / 2;
-    // Tangential movement = projection of the pointer delta onto the
-    // direction perpendicular to the vector (center -> pointer).
-    const dx = e.clientX - ringLast.current.x;
-    const dy = e.clientY - ringLast.current.y;
-    const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-    if (dist > 4) {
-      // tangent direction (counterclockwise positive)
-      const tx = -(e.clientY - cy) / dist;
-      const ty = (e.clientX - cx) / dist;
-      // positive dot = counterclockwise around the screen (y down flips sign)
-      ringAccum.current += -(dx * tx + dy * ty) / Math.max(dist, r.width / 2);
-    } else {
-      // pointer near the center: fall back to horizontal drag as rotation
-      ringAccum.current += dx / 120;
+    const maxR = r.width / 2;
+    let vx = e.clientX - cx;
+    let vy = e.clientY - cy;
+    const dist = Math.hypot(vx, vy);
+    if (dist > maxR) {
+      vx = (vx / dist) * maxR;
+      vy = (vy / dist) * maxR;
     }
-    ringLast.current = { x: e.clientX, y: e.clientY };
-    // apply in small chunks so the camera animation stays smooth
-    const threshold = 0.02;
-    while (Math.abs(ringAccum.current) > threshold) {
-      const chunk = Math.sign(ringAccum.current) * threshold;
-      doRotate(chunk);
-      ringAccum.current -= chunk;
-    }
+    joyVector.current = { x: vx / maxR, y: vy / maxR };
+    setJoyKnob({ x: vx, y: vy });
   };
 
   return (
@@ -542,7 +558,8 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
 
           <span className="h-6 w-px shrink-0 bg-sand/15" aria-hidden />
 
-          {/* Rotate: orbit buttons + drag ring for fine control */}
+          {/* Rotate: orbit buttons + joystick pad. Hold the knob and pull it
+              left/right — the camera orbits while held; release to stop. */}
           <div className="flex shrink-0 items-center gap-1.5">
             <button
               type="button"
@@ -553,35 +570,31 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
               <RotateCcw className="w-4 h-4" aria-hidden />
             </button>
             <div
-              ref={ringRef}
-              role="slider"
+              ref={padRef}
+              role="application"
               aria-label={dict.controls.rotateDrag}
-              aria-valuemin={0}
-              aria-valuemax={360}
-              aria-valuenow={0}
               tabIndex={0}
               onPointerDown={(e) => {
                 e.currentTarget.setPointerCapture(e.pointerId);
-                setRingActive(true);
+                joyActiveRef.current = true;
+                setJoyActive(true);
                 setHintVisible(false);
-                ringLast.current = { x: e.clientX, y: e.clientY };
-                ringAccum.current = 0;
+                runJoystick();
+                onPadMove(e);
               }}
-              onPointerMove={onRingMove}
-              onPointerUp={() => {
-                setRingActive(false);
-                ringLast.current = null;
-              }}
-              onPointerCancel={() => {
-                setRingActive(false);
-                ringLast.current = null;
-              }}
-              className={`relative flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 cursor-grab touch-none items-center justify-center rounded-full border-2 transition-colors active:cursor-grabbing ${
-                ringActive ? "border-gold" : "border-sand/25 hover:border-gold/60"
+              onPointerMove={onPadMove}
+              onPointerUp={stopJoystick}
+              onPointerCancel={stopJoystick}
+              className={`relative flex h-11 w-11 shrink-0 touch-none items-center justify-center rounded-full border-2 bg-black/30 backdrop-blur transition-colors ${
+                joyActive ? "border-gold shadow-[0_0_12px_rgba(217,164,65,0.4)]" : "border-sand/25 hover:border-gold/60"
               }`}
             >
-              <span className="absolute top-1/2 left-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold" />
-              <Move3d className="w-4 h-4 text-sand/70" aria-hidden />
+              {/* knob follows the pointer inside the pad */}
+              <span
+                className="pointer-events-none absolute h-4 w-4 rounded-full bg-gold shadow-[0_0_10px_rgba(217,164,65,0.6)] transition-transform duration-75"
+                style={{ transform: `translate(${joyKnob.x}px, ${joyKnob.y}px)` }}
+              />
+              <Move3d className="pointer-events-none w-4 h-4 text-sand/40" aria-hidden />
             </div>
             <button
               type="button"
