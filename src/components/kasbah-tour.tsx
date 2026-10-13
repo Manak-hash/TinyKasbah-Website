@@ -483,12 +483,6 @@ export default function KasbahTour({
             >
               {dict.common.exploreIn3d}
             </a>
-            <a
-              href="mailto:contact@terrevolution.ma"
-              className="mt-2 block text-xs text-sand/60 underline decoration-sand/30 underline-offset-4 transition-colors hover:text-gold"
-            >
-              {dict.common.contact}
-            </a>
           </div>
         </div>
 
