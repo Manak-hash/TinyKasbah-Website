@@ -7,6 +7,7 @@ import {
   ArrowRight,
   ChevronDown,
   Globe,
+  Mail,
   Music,
   Pause,
   Play,
@@ -319,6 +320,16 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
         <span>{onConcept ? dict.menu.ctaTour : dict.menu.ctaConcept}</span>
         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
       </Link>
+
+      {/* Contact — directly under the page-redirect CTA */}
+      <a
+        href="mailto:contact@terrevolution.ma"
+        onClick={() => setOpen(false)}
+        className="-mt-1 flex items-center justify-between rounded-xl border border-sand/15 px-4 py-2.5 text-xs text-sand/80 transition-colors hover:border-gold/50 hover:text-gold active:scale-[0.99]"
+      >
+        <span>{dict.common.contact}</span>
+        <Mail className="h-3.5 w-3.5 text-sand/50" />
+      </a>
 
       {/* Music */}
       <div className="border-t border-sand/10 pt-4">
