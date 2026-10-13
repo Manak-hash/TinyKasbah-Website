@@ -215,10 +215,13 @@ function CameraRig({
   viewReq,
   zoomReq,
   rotateReq,
+  joystickRef,
 }: {
   viewReq: ViewRequest | null;
   zoomReq: ZoomRequest | null;
   rotateReq: RotateRequest | null;
+  /** live joystick offset (-1..1) — read per frame for continuous orbit */
+  joystickRef: React.RefObject<{ x: number; y: number }>;
 }) {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls) as React.ComponentRef<typeof MapControls> | null;
@@ -273,7 +276,27 @@ function CameraRig({
 
   // Height clamp: whatever the controls do, the camera never dips under the
   // floor plane or over the roofline.
-  useFrame(() => {
+  // Joystick orbit: applied directly every frame from the live offset —
+  // no per-request transitions, so it feels 1:1 with the finger. Smoothed
+  // velocity (lerp toward target) gives momentum without lag.
+  const joyVelocity = useRef(0);
+  useFrame((_, delta) => {
+    if (controls && joystickRef.current) {
+      const { x } = joystickRef.current;
+      const mag = Math.min(1, Math.hypot(x, joystickRef.current.y));
+      // dead zone 0.12, quadratic ramp, max ~1.6 rad/s at full deflection
+      const target = mag > 0.12 ? Math.sign(x) * mag * mag * 1.6 : 0;
+      joyVelocity.current += (target - joyVelocity.current) * Math.min(1, delta * 10);
+      if (Math.abs(joyVelocity.current) > 0.0005) {
+        const offset = camera.position.clone().sub(controls.target);
+        const spherical = new Spherical().setFromVector3(offset);
+        spherical.theta -= joyVelocity.current * delta;
+        offset.setFromSpherical(spherical);
+        camera.position.copy(controls.target).add(offset);
+        controls.update();
+      }
+    }
+
     if (orbit.current && controls) {
       const o = orbit.current;
       const step = Math.sign(o.remaining) * Math.min(Math.abs(o.step) / 60, Math.abs(o.remaining));
@@ -387,43 +410,19 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
   }, []);
 
   // Joystick rotate: hold and drag the knob inside the pad — the offset of
-  // the pointer from the pad center maps to a continuous orbit speed and
-  // direction (left = rotate left, right = rotate right). Works identically
-  // for mouse, pad and touch because it only cares about the offset vector,
-  // not gesture precision: no angles, no jitter, no dead zones.
+  // the pointer from the pad center is read LIVE by CameraRig every frame
+  // (joystickRef) and orbits the camera directly. No request queue, no rAF
+  // loop here: frame-rate independent and 1:1 with the finger.
   const padRef = useRef<HTMLDivElement>(null);
-  const joyFrame = useRef<number | null>(null);
-  const joyVector = useRef({ x: 0, y: 0 });
+  const joystickRef = useRef({ x: 0, y: 0 });
   const joyActiveRef = useRef(false);
 
   const stopJoystick = useCallback(() => {
     joyActiveRef.current = false;
+    joystickRef.current = { x: 0, y: 0 };
     setJoyActive(false);
-    joyVector.current = { x: 0, y: 0 };
-    if (joyFrame.current !== null) {
-      cancelAnimationFrame(joyFrame.current);
-      joyFrame.current = null;
-    }
     setJoyKnob({ x: 0, y: 0 });
   }, []);
-
-  const runJoystick = useCallback(() => {
-    // rAF loop: orbit continuously while the knob is held off-center.
-    // Speed ramps with offset distance; capped at ~90°/s.
-    const tick = () => {
-      if (!joyActiveRef.current) return;
-      const { x, y } = joyVector.current;
-      const mag = Math.min(1, Math.hypot(x, y));
-      if (mag > 0.12) {
-        // horizontal offset drives orbit; vertical offset (n/y) ignored for
-        // orbit — the height clamp already protects the vertical axis.
-        const speed = Math.sign(x) * mag * mag * 0.026; // rad per frame @60fps
-        doRotate(speed);
-      }
-      joyFrame.current = requestAnimationFrame(tick);
-    };
-    if (joyFrame.current === null) joyFrame.current = requestAnimationFrame(tick);
-  }, [doRotate]);
 
   const onPadMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!joyActiveRef.current || !padRef.current) return;
@@ -438,7 +437,7 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
       vx = (vx / dist) * maxR;
       vy = (vy / dist) * maxR;
     }
-    joyVector.current = { x: vx / maxR, y: vy / maxR };
+    joystickRef.current = { x: vx / maxR, y: vy / maxR };
     setJoyKnob({ x: vx, y: vy });
   };
 
@@ -486,7 +485,7 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
             mouseButtons={{ LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }}
             touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
           />
-          <CameraRig viewReq={viewReq} zoomReq={zoomReq} rotateReq={rotateReq} />
+          <CameraRig viewReq={viewReq} zoomReq={zoomReq} rotateReq={rotateReq} joystickRef={joystickRef} />
           <SectionCut cut={cutValue} />
         </Canvas>
       ) : (
@@ -579,22 +578,43 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
                 joyActiveRef.current = true;
                 setJoyActive(true);
                 setHintVisible(false);
-                runJoystick();
                 onPadMove(e);
               }}
               onPointerMove={onPadMove}
               onPointerUp={stopJoystick}
               onPointerCancel={stopJoystick}
-              className={`relative flex h-11 w-11 shrink-0 touch-none items-center justify-center rounded-full border-2 bg-black/30 backdrop-blur transition-colors ${
-                joyActive ? "border-gold shadow-[0_0_12px_rgba(217,164,65,0.4)]" : "border-sand/25 hover:border-gold/60"
+              className={`relative flex h-11 w-11 shrink-0 touch-none items-center justify-center rounded-full transition-colors ${
+                joyActive
+                  ? "border border-gold/70 shadow-[inset_0_0_10px_rgba(217,164,65,0.15),0_0_14px_rgba(217,164,65,0.3)]"
+                  : "border border-sand/20 hover:border-gold/50"
               }`}
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 42%, rgba(232,220,195,0.10), rgba(13,10,7,0.85) 72%)",
+                backdropFilter: "blur(8px)",
+              }}
             >
+              {/* concentric guide ring */}
+              <span
+                aria-hidden
+                className={`pointer-events-none absolute h-6 w-6 rounded-full border transition-colors ${
+                  joyActive ? "border-gold/30" : "border-sand/10"
+                }`}
+              />
               {/* knob follows the pointer inside the pad */}
               <span
-                className="pointer-events-none absolute h-4 w-4 rounded-full bg-gold shadow-[0_0_10px_rgba(217,164,65,0.6)] transition-transform duration-75"
-                style={{ transform: `translate(${joyKnob.x}px, ${joyKnob.y}px)` }}
+                className="pointer-events-none absolute h-4.5 w-4.5 rounded-full"
+                style={{
+                  width: 18,
+                  height: 18,
+                  transform: `translate(${joyKnob.x}px, ${joyKnob.y}px)`,
+                  transition: joyActive ? "none" : "transform 0.18s cubic-bezier(0.22, 1, 0.36, 1)",
+                  background: "linear-gradient(160deg, #e9bd58, #c9862f)",
+                  boxShadow: joyActive
+                    ? "0 0 14px rgba(217,164,65,0.75), inset 0 -2px 4px rgba(0,0,0,0.35), inset 0 1px 2px rgba(255,255,255,0.45)"
+                    : "0 1px 6px rgba(217,164,65,0.35), inset 0 -2px 4px rgba(0,0,0,0.35), inset 0 1px 2px rgba(255,255,255,0.45)",
+                }}
               />
-              <Move3d className="pointer-events-none w-4 h-4 text-sand/40" aria-hidden />
             </div>
             <button
               type="button"
