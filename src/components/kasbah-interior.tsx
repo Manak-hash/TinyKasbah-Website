@@ -386,19 +386,44 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
   };
 
   // Drag ring: pointer angle around the ring center -> continuous orbit.
+  // Robustness for pads + touch:
+  // - track the PREVIOUS pointer position instead of absolute angles: near
+  //   the ring center (finger on a small ring) atan2 angles jump wildly.
+  // - accumulate tiny deltas (pad micro-moves) and only apply above a
+  //   threshold, so jitter doesn't spin the camera.
+  // - movement is applied relative to the ring radius: drags measured at the
+  //   ring edge and at the center produce the same rotation speed.
   const ringRef = useRef<HTMLDivElement>(null);
-  const ringLast = useRef(0);
+  const ringLast = useRef<{ x: number; y: number } | null>(null);
+  const ringAccum = useRef(0);
   const onRingMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!ringActive || !ringRef.current) return;
+    if (!ringActive || !ringRef.current || !ringLast.current) return;
     const r = ringRef.current.getBoundingClientRect();
-    const angle = Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
-    if (ringLast.current !== 0) {
-      let d = angle - ringLast.current;
-      if (d > Math.PI) d -= Math.PI * 2;
-      if (d < -Math.PI) d += Math.PI * 2;
-      doRotate(d);
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    // Tangential movement = projection of the pointer delta onto the
+    // direction perpendicular to the vector (center -> pointer).
+    const dx = e.clientX - ringLast.current.x;
+    const dy = e.clientY - ringLast.current.y;
+    const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+    if (dist > 4) {
+      // tangent direction (counterclockwise positive)
+      const tx = -(e.clientY - cy) / dist;
+      const ty = (e.clientX - cx) / dist;
+      // positive dot = counterclockwise around the screen (y down flips sign)
+      ringAccum.current += -(dx * tx + dy * ty) / Math.max(dist, r.width / 2);
+    } else {
+      // pointer near the center: fall back to horizontal drag as rotation
+      ringAccum.current += dx / 120;
     }
-    ringLast.current = angle;
+    ringLast.current = { x: e.clientX, y: e.clientY };
+    // apply in small chunks so the camera animation stays smooth
+    const threshold = 0.02;
+    while (Math.abs(ringAccum.current) > threshold) {
+      const chunk = Math.sign(ringAccum.current) * threshold;
+      doRotate(chunk);
+      ringAccum.current -= chunk;
+    }
   };
 
   return (
@@ -539,20 +564,17 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
                 e.currentTarget.setPointerCapture(e.pointerId);
                 setRingActive(true);
                 setHintVisible(false);
-                const r = e.currentTarget.getBoundingClientRect();
-                ringLast.current = Math.atan2(
-                  e.clientY - (r.top + r.height / 2),
-                  e.clientX - (r.left + r.width / 2),
-                );
+                ringLast.current = { x: e.clientX, y: e.clientY };
+                ringAccum.current = 0;
               }}
               onPointerMove={onRingMove}
               onPointerUp={() => {
                 setRingActive(false);
-                ringLast.current = 0;
+                ringLast.current = null;
               }}
               onPointerCancel={() => {
                 setRingActive(false);
-                ringLast.current = 0;
+                ringLast.current = null;
               }}
               className={`relative flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 cursor-grab touch-none items-center justify-center rounded-full border-2 transition-colors active:cursor-grabbing ${
                 ringActive ? "border-gold" : "border-sand/25 hover:border-gold/60"
