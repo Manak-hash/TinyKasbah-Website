@@ -36,6 +36,7 @@ const variants: Variants = {
     scale: 0.9,
     opacity: 0,
     rotate: direction > 0 ? 8 : -8,
+    zIndex: 2,
   }),
   center: {
     x: 0,
