@@ -178,6 +178,7 @@ const en = {
     whatsappMsg2: "Hello, I'd like information for an event",
     whatsappMsg3: "Hello, I have a question about the project",
     whatsappOther: "Other message",
+    instagram: "Instagram",
     music: "Music",
     language: "Language",
   },

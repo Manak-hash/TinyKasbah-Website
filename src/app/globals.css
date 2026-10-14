@@ -151,6 +151,46 @@ body {
   }
 }
 
+/* Instagram open animation: a story-style ring draws around the glyph
+   (dot fades in after), then the profile handoff happens (timer-driven
+   in the component). */
+.ig-ring {
+  stroke-dasharray: 63;
+  stroke-dashoffset: 63;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  animation: ig-ring-draw 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes ig-ring-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.ig-dot {
+  opacity: 0;
+  animation: ig-dot-in 0.3s ease-out 0.35s forwards;
+}
+
+@keyframes ig-dot-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ig-ring {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .ig-dot {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;

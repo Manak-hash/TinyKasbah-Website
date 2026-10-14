@@ -181,6 +181,7 @@ const de: Messages = {
     whatsappMsg2: "Hallo, ich möchte Informationen für eine Veranstaltung",
     whatsappMsg3: "Hallo, ich habe eine Frage zum Projekt",
     whatsappOther: "Andere Nachricht",
+    instagram: "Instagram",
     music: "Musik",
     language: "Sprache",
   },
