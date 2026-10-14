@@ -3,9 +3,29 @@ import { AVAILABLE_LOCALES, isAvailableLocale, type Locale } from "@/i18n/config
 import { getDictionary } from "@/i18n/dictionaries";
 import KasbahInterior from "@/components/kasbah-interior";
 import BrandMark from "@/components/brand-mark";
+import { buildPageMetadata, CONCEPT_DESCRIPTIONS, CONCEPT_TITLES } from "@/lib/seo";
+import type { AvailableLocale } from "@/i18n/config";
 
 export async function generateStaticParams() {
   return AVAILABLE_LOCALES.map((lang) => ({ lang }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
+  if (!isAvailableLocale(lang)) return {};
+  const locale = lang as AvailableLocale;
+  return buildPageMetadata({
+    locale,
+    // No bare /concept canonical: next.config 302s it to /fr/concept.
+    canonicalPath: `/${locale}/concept`,
+    pathFor: (l) => `/${l}/concept`,
+    title: CONCEPT_TITLES[locale],
+    description: CONCEPT_DESCRIPTIONS[locale],
+  });
 }
 
 export default async function ConceptPage({

@@ -4,6 +4,8 @@ import "../globals.css";
 import { AVAILABLE_LOCALES, isAvailableLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 import SiteMenu from "@/components/site-menu";
+import { HOME_DESCRIPTIONS, HOME_TITLES } from "@/lib/seo";
+import { buildJsonLd } from "@/lib/jsonld";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,18 +33,10 @@ export async function generateMetadata({
   params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
   const { lang } = await params;
-  const titles: Record<string, string> = {
-    fr: "Tiny Tea Kasbah : Un salon de thé, quatre univers du Maroc",
-    en: "Tiny Tea Kasbah: One tea salon, four Moroccan universes",
-    de: "Tiny Tea Kasbah: Ein Teesalon, vier marokkanische Welten",
-  };
-  const descriptions: Record<string, string> = {
-    fr: "Un salon de thé de 6,00 × 6,60 m : quatre univers du Maroc sous une seule kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui. Bientôt.",
-    en: "A 6.00 × 6.60 m tea salon: four Moroccan universes under one kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui. Coming soon.",
-    de: "Ein Teesalon auf 6,00 × 6,60 m: vier marokkanische Welten unter einer einzigen Kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui. Bald.",
-  };
   const locale = isAvailableLocale(lang) ? lang : "fr";
-  return { title: titles[locale], description: descriptions[locale] };
+  // Fallback copy only — canonical/hreflang/OG live in each page's
+  // generateMetadata (see src/lib/seo.ts).
+  return { title: HOME_TITLES[locale], description: HOME_DESCRIPTIONS[locale] };
 }
 
 export default async function LangLayout({
@@ -63,6 +57,10 @@ export default async function LangLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${marhey.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd()) }}
+        />
         {children}
         <SiteMenu dict={dict} />
       </body>

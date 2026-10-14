@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
+  // Resolves every relative canonical/OG URL in child pages against the
+  // canonical www host (the apex 308-redirects here).
+  metadataBase: new URL(SITE_URL),
   title: "Tiny Tea Kasbah : Un salon de thé, quatre univers du Maroc",
   description:
     "Un salon de thé de 6,00 × 6,60 m : quatre univers du Maroc sous une seule kasbah. Amazigh, Fassi, Chamali Rifi, Sahraoui. Bientôt.",
