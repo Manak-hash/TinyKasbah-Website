@@ -122,15 +122,17 @@ export const CarouselSlider: React.FC<CarouselSliderProps> = ({
         {slides.map((s, i) => {
           const rel = slideRel(i);
           const isCenter = rel === 0;
-          const x = rel * 240 + (Math.abs(rel) <= 1 ? dragOffset : 0);
-          const onScreen = Math.abs(rel * 240 + dragOffset) < 420;
+          const x = isCenter ? dragOffset * 0.35 : 0;
+          // Only the active slide is rendered; neighbors stay mounted but
+          // invisible (preload + instant crossfade target).
+          const onScreen = isCenter || (Math.abs(rel) === 1 && Math.abs(dragOffset) > 8);
           return (
             <div
               key={s.id}
-              className="absolute inset-0 transition-[transform,opacity] duration-300 ease-out"
+              className="absolute inset-0 transition-[transform,opacity] duration-500 ease-out"
               style={{
-                transform: `translateX(${x}px) rotate(${isCenter ? -3 : rel > 0 ? 6 : -6}deg) scale(${isCenter ? 1 : 0.88})`,
-                opacity: onScreen ? (isCenter ? 1 : 0.55) : 0,
+                transform: `translateX(${x}px) scale(${isCenter ? 1 : 1.06})`,
+                opacity: isCenter ? 1 : onScreen ? 0 : 0,
                 zIndex: isCenter ? 2 : 1,
                 pointerEvents: isCenter ? "auto" : "none",
               }}
