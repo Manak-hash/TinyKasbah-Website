@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   motion,
@@ -24,6 +24,8 @@ export interface UniverseSlide {
 interface CarouselSliderProps {
   slides: UniverseSlide[];
   hint?: string;
+  /** ms between automatic advances; drag/click resets the timer */
+  autoAdvanceMs?: number;
 }
 
 /* ---------------- Animation Variants ---------------- */
@@ -53,22 +55,47 @@ const variants: Variants = {
 
 /* ---------------- Component ---------------- */
 
-export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides, hint }) => {
+export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides, hint, autoAdvanceMs = 6700 }) => {
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
-
-  const dragX = useMotionValue(0);
-  const rotate = useTransform(dragX, [-200, 200], [-12, 12]);
+  const autoTimer = useRef<number | null>(null);
 
   const paginate = (newDirection: number) => {
     setDirection(newDirection);
     setIndex((prev) => (prev + newDirection + slides.length) % slides.length);
   };
 
+  // Preload every slide image on mount so switching never shows a loading
+  // gap — the files are small and there are only four.
+  useEffect(() => {
+    slides.forEach((s) => {
+      const img = new window.Image();
+      img.src = s.img;
+    });
+  }, [slides]);
+
+  // Auto-advance every autoAdvanceMs. Any manual interaction (drag or dot
+  // click) resets the timer so the carousel never fights the visitor.
+  const resetAuto = () => {
+    if (autoTimer.current !== null) window.clearInterval(autoTimer.current);
+    autoTimer.current = window.setInterval(() => paginate(1), autoAdvanceMs);
+  };
+  useEffect(() => {
+    resetAuto();
+    return () => {
+      if (autoTimer.current !== null) window.clearInterval(autoTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slides, autoAdvanceMs]);
+
+  const dragX = useMotionValue(0);
+  const rotate = useTransform(dragX, [-200, 200], [-12, 12]);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleDragEnd = (_: any, info: PanInfo) => {
     if (info.offset.x < -120) paginate(1);
     else if (info.offset.x > 120) paginate(-1);
+    resetAuto();
   };
 
   const slide = slides[index];
@@ -77,7 +104,8 @@ export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides, hint }) 
     <div className="flex flex-col items-center justify-center w-full max-w-full">
       {/* Slider */}
       <div className="relative w-64 sm:w-72 max-w-[82vw] aspect-[4/5] flex items-center justify-center -rotate-[6deg]">
-        <AnimatePresence custom={direction} mode="wait">
+        {/* enter/exit overlap (no mode="wait"): switching feels instant */}
+        <AnimatePresence custom={direction} initial={false}>
           <motion.div
             key={index}
             custom={direction}
@@ -86,12 +114,13 @@ export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides, hint }) 
             animate="center"
             exit="exit"
             transition={{
-              x: { type: "spring", stiffness: 280, damping: 28 },
-              scale: { duration: 0.35 },
-              opacity: { duration: 0.25 },
+              x: { type: "spring", stiffness: 320, damping: 30 },
+              scale: { duration: 0.3 },
+              opacity: { duration: 0.22 },
             }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.6}
             style={{ rotate, x: dragX }}
             onDragEnd={handleDragEnd}
             className="absolute w-full h-full bg-[#FDFDFD] rounded-[40px] p-2 shadow-md border-[1.2px] border-[#E6E6EA] overflow-hidden cursor-grab active:cursor-grabbing"
@@ -102,6 +131,7 @@ export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides, hint }) 
                 alt={slide.title}
                 fill
                 sizes="(max-width: 640px) 82vw, 288px"
+                priority={index === 0}
                 draggable={false}
                 className="object-cover w-full h-full pointer-events-none select-none"
               />
@@ -139,6 +169,7 @@ export const CarouselSlider: React.FC<CarouselSliderProps> = ({ slides, hint }) 
             onClick={() => {
               setDirection(i > index ? 1 : -1);
               setIndex(i);
+              resetAuto();
             }}
             title={s.title}
           />

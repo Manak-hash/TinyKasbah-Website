@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import {
   ArrowRight,
@@ -79,6 +80,39 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
   const [waSending, setWaSending] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // Prefetch all locale routes on mount (idle): switching language later is
+  // instant — no spinner, no re-fetch, and the 3D model stays cached.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      for (const loc of LOCALES) {
+        if (loc !== locale) router.prefetch(pathFor(loc));
+      }
+    }, 1200);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Restore scroll position after a language switch (saved by the language
+  // links onClick). Only applies within 10s of a switch, so normal
+  // navigation still starts at the top.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("ttk.scrollRestore");
+      if (!raw) return;
+      const { y, ts } = JSON.parse(raw);
+      sessionStorage.removeItem("ttk.scrollRestore");
+      if (Date.now() - ts < 10_000 && y > 0) {
+        // double-rAF: wait for the new page's layout (and lazy content) to exist
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior })),
+        );
+      }
+    } catch {
+      /* malformed entry — ignore */
+    }
+  }, []);
 
   // ----- audio state -----
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -472,11 +506,28 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
                 <Link
                   key={loc}
                   href={pathFor(loc)}
+                  onMouseEnter={() => {
+                    // Warm up the target locale's route (RSC payload) so the
+                    // switch doesn't re-render from zero.
+                    router.prefetch(pathFor(loc));
+                  }}
+                  onFocus={() => router.prefetch(pathFor(loc))}
                   onClick={() => {
                     // localStorage drives nothing server-side; the cookie is
                     // what the middleware reads on the next visit to /.
                     localStorage.setItem(LS_LOCALE, loc);
                     document.cookie = `ttk.locale=${loc}; path=/; max-age=31536000; samesite=lax`;
+                    // Client-side navigation loses the scroll position (the
+                    // new locale page mounts fresh) — save it and restore
+                    // after the route change completes.
+                    try {
+                      sessionStorage.setItem(
+                        "ttk.scrollRestore",
+                        JSON.stringify({ y: window.scrollY, ts: Date.now() }),
+                      );
+                    } catch {
+                      /* storage unavailable — skip restore */
+                    }
                     setOpen(false);
                   }}
                   className={`flex min-h-11 items-center justify-between rounded-lg px-3 text-xs transition-colors active:bg-white/10 ${
