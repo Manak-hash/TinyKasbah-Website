@@ -1,4 +1,5 @@
 import { SITE_URL } from "@/lib/seo";
+import { INSTAGRAM_URL, WHATSAPP_PHONE } from "@/lib/contacts";
 
 /**
  * Structured data (schema.org) rendered as JSON-LD in the [lang] layout.
@@ -37,11 +38,11 @@ export function buildJsonLd() {
         },
         contactPoint: {
           "@type": "ContactPoint",
-          telephone: "+212661315158",
+          telephone: WHATSAPP_PHONE,
           contactType: "customer service",
           availableLanguage: ["fr", "ar", "en"],
         },
-        sameAs: ["https://www.instagram.com/terrevolution.ma/"],
+        sameAs: [INSTAGRAM_URL],
       },
       {
         "@type": "WebSite",

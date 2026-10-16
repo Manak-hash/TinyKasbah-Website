@@ -13,7 +13,7 @@ export default function BrandMark({
 }) {
   return (
     <div className="absolute top-5 left-6 z-50 flex items-center gap-3">
-      <a href={href} aria-label="Terrevolution — accueil" className="shrink-0">
+      <a href={href} aria-label="Terrevolution, accueil" className="shrink-0">
         <Image
           src="/img/terrevolution-mark.png"
           alt="Terrevolution"

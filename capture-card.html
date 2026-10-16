@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>booting</title>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; background: #16110b; }
+  #c { width: 100vw; height: 100vh; display: block; }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "./node_modules/three/build/three.module.js",
+    "three/addons/": "./node_modules/three/examples/jsm/",
+    "meshopt": "./node_modules/.pnpm/meshoptimizer@1.1.1/node_modules/meshoptimizer/meshopt_decoder.mjs"
+} }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'meshopt';
+
+const ratio = 85 / 55; // card landscape
+const W = 2010, H = Math.round(2010 / ratio); // 2010 x 1300 = 85x55mm @600dpi
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#16110b');
+scene.fog = new THREE.Fog('#231a10', 60, 220);
+
+const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 1000);
+
+// lights: warm key from the right (like the OG image), moody fill
+const key = new THREE.DirectionalLight('#ffd9a0', 3.2); key.position.set(10, 8, 5); scene.add(key);
+const fill = new THREE.DirectionalLight('#8fa3c0', 0.35); fill.position.set(-8, 6, -4); scene.add(fill);
+const amb = new THREE.AmbientLight('#2a1e12', 1.1); scene.add(amb);
+const spot = new THREE.SpotLight('#ffe2b0', 80, 60, 0.5, 0.6); spot.position.set(5, 7, 12); scene.add(spot);
+
+const loader = new GLTFLoader();
+loader.setMeshoptDecoder(MeshoptDecoder);
+loader.load('./public/models/kasbah.glb', (gltf) => {
+  const model = gltf.scene;
+  // center the model
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  model.position.sub(center);
+  scene.add(model);
+
+  // ground plane to catch the building (subtle, dark)
+  const ground = new THREE.Mesh(
+    new THREE.CircleGeometry(120, 48),
+    new THREE.MeshStandardMaterial({ color: '#3a2e20', roughness: 1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -size.y / 2 - 0.01;
+  scene.add(ground);
+
+  // exterior 3/4 hero angle, tight framing like the OG image
+  const dist = Math.max(size.x, size.y, size.z) * 1.02;
+  camera.position.set(dist * 0.72, size.y * 0.34, dist * 0.82);
+  camera.lookAt(0, -size.y * 0.10, 0);
+
+  window.__ready = true;
+  document.title = 'READY';
+  renderer.render(scene, camera);
+}, undefined, (err) => { console.error(err); document.title = 'ERR ' + String(err); window.__error = String(err); });
+
+window.__shot = () => {
+  return document.getElementById('c').toDataURL('image/png');
+};
+</script>
+</body>
+</html>

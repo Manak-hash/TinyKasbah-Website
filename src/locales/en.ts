@@ -2,7 +2,6 @@ const en = {
   common: {
     brandTagline: "The art of Moroccan tea as living architecture",
     contact: "Contact us",
-    languageLabel: "Language",
     loading3d: "Loading 3D model…",
     webglMissing:
       "Your browser cannot display 3D (WebGL).",
@@ -10,25 +9,18 @@ const en = {
       "Try a recent browser with hardware acceleration enabled.",
     scrollHint: "Scroll to walk through",
     exploreIn3d: "Explore the concept",
-    discover: "Discover the concept",
     dragToExplore: "Drag to explore",
     cutLabel: "Interior view",
     daylightLabel: "Daylight study",
     timeLabel: "Time of day",
   },
   hero: {
-    badge: "Coming soon, a Terrevolution concept",
     kicker: "A Terrevolution concept",
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:
       "A 6.00 × 6.60 m tea salon, four Moroccan universes under one kasbah. Architecture like tea: slow, precise, alive.",
     scrollCta: "Scroll to visit",
-    stats: [
-      { value: "4", label: "cultural universes" },
-      { value: "6.00 × 6.60 m", label: "compact concept" },
-      { value: "100%", label: "renewable energy" },
-    ],
   },
   concept: {
     backToTour: "3D tour",
@@ -58,9 +50,6 @@ const en = {
         subtitle: "Chefchaouen blue, wild thyme, the Mediterranean",
       },
     ],
-  },
-  viewer: {
-    title: "Explore the kasbah in 3D",
   },
   features: {
     title: "Building authenticity with precision",
@@ -133,8 +122,6 @@ const en = {
     },
   },
   footer: {
-    quote:
-      "“Preserve Morocco's living heritage by making it accessible, contemporary and economically viable.”",
     byline:
       "A Terrevolution concept. Follow the launch.",
     copyright: "Terrevolution",
@@ -157,8 +144,6 @@ const en = {
   },
   music: {
     title: "Ambiance: Moroccan tea music",
-    expand: "Show music controls",
-    collapse: "Hide music controls",
     play: "Play music",
     pause: "Pause music",
     mute: "Mute",
@@ -173,11 +158,6 @@ const en = {
     ctaConcept: "Discover the concept",
     ctaTour: "3D tour",
     whatsapp: "WhatsApp",
-    whatsappTitle: "Message on WhatsApp",
-    whatsappMsg1: "Hello, I'm interested in the Tiny Tea Kasbah",
-    whatsappMsg2: "Hello, I'd like information for an event",
-    whatsappMsg3: "Hello, I have a question about the project",
-    whatsappOther: "Other message",
     instagram: "Instagram",
     music: "Music",
     language: "Language",

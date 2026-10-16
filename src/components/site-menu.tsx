@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { INSTAGRAM_URL, WHATSAPP_URL } from "@/lib/contacts";
 import {
   ArrowRight,
   ChevronDown,
@@ -349,12 +350,10 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
   useEffect(() => () => {
     if (sendTimer.current !== null) window.clearTimeout(sendTimer.current);
   }, []);
-  const openWhatsApp = (message?: string) => {
+  const openWhatsApp = () => {
     if (waSending) return;
     setWaSending(true);
-    const url = message
-      ? `https://wa.me/212661315158?text=${encodeURIComponent(message)}`
-      : "https://wa.me/212661315158";
+    const url = WHATSAPP_URL;
     sendTimer.current = window.setTimeout(() => {
       window.open(url, "_blank", "noopener,noreferrer");
       setWaSending(false);
@@ -374,7 +373,7 @@ export default function SiteMenu({ dict }: { dict: Dictionary }) {
     setIgOpening(true);
     igTimer.current = window.setTimeout(() => {
       window.open(
-        "https://www.instagram.com/terrevolution.ma/",
+        INSTAGRAM_URL,
         "_blank",
         "noopener,noreferrer",
       );

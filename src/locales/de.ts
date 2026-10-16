@@ -5,7 +5,6 @@ const de: Messages = {
     brandTagline:
       "Die marokkanische Teekunst als lebendige Architektur",
     contact: "Kontakt aufnehmen",
-    languageLabel: "Sprache",
     loading3d: "3D-Modell wird geladen…",
     webglMissing:
       "Ihr Browser kann 3D nicht anzeigen (WebGL).",
@@ -13,25 +12,18 @@ const de: Messages = {
       "Bitte verwenden Sie einen aktuellen Browser mit Hardwarebeschleunigung.",
     scrollHint: "Scrollen Sie zum Weitergehen",
     exploreIn3d: "Das Konzept erkunden",
-    discover: "Das Konzept entdecken",
     dragToExplore: "Ziehen zum Erkunden",
     cutLabel: "Innenansicht",
     daylightLabel: "Tageslichtstudie",
     timeLabel: "Tageszeit",
   },
   hero: {
-    badge: "Bald, ein Konzept von Terrevolution",
     kicker: "Ein Konzept von Terrevolution",
     title1: "Tiny Tea",
     title2: "Kasbah",
     subtitle:
       "Ein Teesalon auf 6,00 × 6,60 m: vier marokkanische Welten unter einer einzigen Kasbah. Architektur wie Tee: langsam, präzise, lebendig.",
     scrollCta: "Scrollen Sie für den Rundgang",
-    stats: [
-      { value: "4", label: "Kulturuniversen" },
-      { value: "6,00 × 6,60 m", label: "kompaktes Konzept" },
-      { value: "100%", label: "erneuerbare Energie" },
-    ],
   },
   concept: {
     backToTour: "3D-Tour",
@@ -61,9 +53,6 @@ const de: Messages = {
         subtitle: "Chefchaouen-Blau, Wildthymian, das Mittelmeer",
       },
     ],
-  },
-  viewer: {
-    title: "Die Kasbah in 3D erkunden",
   },
   features: {
     title: "Authentizität präzise bauen",
@@ -136,8 +125,6 @@ const de: Messages = {
     },
   },
   footer: {
-    quote:
-      "„Das lebendige Erbe Marokkos bewahren, indem man es zugänglich, zeitgemäß und wirtschaftlich tragfähig macht.“",
     byline:
       "Ein Konzept von Terrevolution. Folgen Sie dem Launch.",
     copyright: "Terrevolution",
@@ -160,8 +147,6 @@ const de: Messages = {
   },
   music: {
     title: "Ambiente: marokkanische Teemusik",
-    expand: "Musiksteuerung anzeigen",
-    collapse: "Musiksteuerung ausblenden",
     play: "Musik abspielen",
     pause: "Musik pausieren",
     mute: "Stummschalten",
@@ -176,11 +161,6 @@ const de: Messages = {
     ctaConcept: "Das Konzept entdecken",
     ctaTour: "3D-Tour",
     whatsapp: "WhatsApp",
-    whatsappTitle: "Per WhatsApp schreiben",
-    whatsappMsg1: "Hallo, ich interessiere mich für die Tiny Tea Kasbah",
-    whatsappMsg2: "Hallo, ich möchte Informationen für eine Veranstaltung",
-    whatsappMsg3: "Hallo, ich habe eine Frage zum Projekt",
-    whatsappOther: "Andere Nachricht",
     instagram: "Instagram",
     music: "Musik",
     language: "Sprache",
