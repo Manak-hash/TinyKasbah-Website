@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { BackSide, Box3, BufferAttribute, Color, DoubleSide, Group, IcosahedronGeometry, MeshStandardMaterial, PlaneGeometry } from "three";
+import { BackSide, Box3, Color, DoubleSide, Group } from "three";
 import type { Material, ShaderMaterial } from "three";
 import { Html, useGLTF } from "@react-three/drei";
 import { ArrowDown, Loader2 } from "lucide-react";
@@ -11,6 +11,7 @@ import Image from "next/image";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
 import { SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
+import Desert from "@/components/desert-environment";
 
 const MODEL_URL = "/models/kasbah.glb";
 
@@ -27,8 +28,9 @@ const MODEL_URL = "/models/kasbah.glb";
  * Measured GLB geometry (raw space):
  *   terrain:        X -1.84..10.93, Z -7.83..4.86
  *   hall walls:     X 1.26..7.56, Z -1.38..1.62, roofline Y≈3.15, parapets 3.75
- *   west vestibule: X -0.7..1.26, Z -1.9..-1.3 (the front door)
- *   south annexes:  X 3.19..7.54, Z -5.13..-2.51
+ *   west vestibule: X -0.7..1.26, Z -1.9..-1.3 (projection, no door)
+ *   MAIN ENTRANCE: double-leaf door in the NORTH wall, X 3.86..4.96, Z ≈ 1.7
+ *   south annexes: X 3.19..7.54, Z -5.13..-2.51
  *   skydome crown:  ~(4.4, ·, 0.1)
  *
  * Chapters get EQUAL scroll shares (never distance-normalized — it
@@ -44,20 +46,24 @@ type Waypoint = {
 };
 
 const STOPS: Waypoint[] = [
-  // ── Chapter 1 — L'entrée: axial approach straight onto the two-door
-  //    entrance wall (west façade, vestibule at X -0.7..1.26, Z -1.9..-1.3)
-  { pos: [-15.0, 4.4, -3.0], target: [0.3, 1.4, -1.6], chapter: 0 },
-  { pos: [-10.5, 3.0, -2.2], target: [0.3, 1.4, -1.6], chapter: 0 },
-  { pos: [-7.2, 2.2, -1.8], target: [0.4, 1.4, -1.6], chapter: 0 },
-  { pos: [-5.2, 1.9, -1.6], target: [0.4, 1.3, -1.6], chapter: 0 },
-  // ── Chapter 2 — Compact & réplicable: pull back to a straight-on elevation
-  { pos: [-7.4, 2.6, -1.6], target: [1.4, 1.2, -1.45], chapter: 1 },
-  { pos: [-11.8, 4.6, -1.45], target: [3.4, 0.9, -1.45], chapter: 1 },
-  { pos: [-13.5, 5.6, -1.45], target: [3.6, 0.7, -1.45], chapter: 1 },
-  // ── Chapter 3 — Système constructif et bioclimatique: rise to the crown
-  { pos: [-11.0, 5.2, -5.0], target: [1.6, 2.0, -1.0], chapter: 2 },
-  { pos: [-8.6, 7.4, -6.6], target: [3.4, 2.2, -0.4], chapter: 2 },
-  { pos: [-6.4, 9.6, -8.2], target: [4.2, 2.4, 0.1], chapter: 2 },
+  // ── Chapter 1 — L'entrée: axial approach straight onto the MAIN DOUBLE
+  //    DOOR wall. Measured: the double-leaf door sits in the NORTH wall
+  //    (leaves at X 3.86..4.96, Z ≈ 1.7; the west "vestibule" has no door).
+  //    The approach glides down the north courtyard between the screens.
+  { pos: [6.0, 4.2, 16.0], target: [4.4, 1.4, 1.7], chapter: 0 },
+  { pos: [5.2, 3.0, 10.5], target: [4.4, 1.4, 1.7], chapter: 0 },
+  { pos: [4.7, 2.2, 7.0], target: [4.4, 1.4, 1.7], chapter: 0 },
+  { pos: [4.4, 1.9, 5.2], target: [4.4, 1.3, 1.7], chapter: 0 },
+  // ── Chapter 2 — Compact & réplicable: pull back + rise to a north-east
+  //    three-quarter where the full 6.00 × 6.60 footprint reads as an object
+  { pos: [6.5, 2.5, 4.6], target: [3.4, 0.9, -0.6], chapter: 1 },
+  { pos: [10.0, 3.8, 9.5], target: [3.4, 0.9, -0.6], chapter: 1 },
+  { pos: [14.0, 5.4, 13.5], target: [3.4, 0.9, -0.6], chapter: 1 },
+  // ── Chapter 3 — Système constructif et bioclimatique: keep rising toward
+  //    the crown (skydome at ~X 4.4, Z 0.1) from the north-east
+  { pos: [13.0, 6.2, 12.5], target: [3.8, 2.0, 0.2], chapter: 2 },
+  { pos: [11.0, 8.4, 10.2], target: [4.1, 2.2, 0.1], chapter: 2 },
+  { pos: [9.0, 10.4, 8.0], target: [4.4, 2.4, 0.1], chapter: 2 },
   // ── Chapter 4 — Les quatre cultures: ONE continuous orbit, θ 100°→380°
   //    ellipse rx 9.5 / rz 8.5 around the model centre (4.55, ·, -1.45);
   //    20° steps keep the path on the arc. 4 text stops: θ 100/180/260/340.
@@ -326,125 +332,14 @@ function ExposureRig({ progress }: { progress: number }) {
 }
 
 /**
- * DesertEnvironment — procedural dune terrain + scattered rocks that
- * replaces both the GLB's rectangular plinth slab AND the flat disc: the
- * kasbah now stands in a desert, not on a cake board.
- *
- * - Terrain: 400 × 400 m plane displaced by value-noise dunes (long
- *   anisotropic ridges + detail octaves), flattened to a plaza under the
- *   building (r < 14 m, blended out by 36 m) so nothing pokes through the
- *   model's floor. Opaque + scene fog (#231a10, 60..220 m) swallows the
- *   horizon, so there is no edge and no see-through anywhere.
- * - Rocks: 9 half-buried, jittered icosahedra at 22 m+ from the centre —
- *   camera waypoints never exceed r ≈ 15 m and y ≥ 1.9, so by construction
- *   they stay clear of the validated path (and the GLB validator is
- *   unaffected: this geometry is not part of the model).
- * - Mood: terrain/rock colors are scaled by the same hero/night dim as the
- *   model (color multiplication keeps the materials opaque — transparency
- *   here would reintroduce sorting artifacts against the cutaway).
+ * Desert dunes + rocks live in `desert-environment.tsx` (shared with the
+ * /concept page); here we only feed it the tour's mood curve.
  */
-const PLAZA_RADIUS = 14;
-const PLAZA_BLEND = 36;
-
-function hash2(i: number, j: number) {
-  const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
-  return s - Math.floor(s);
-}
-function vnoise(x: number, y: number) {
-  const xi = Math.floor(x), yi = Math.floor(y);
-  const xf = x - xi, yf = y - yi;
-  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
-  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
-  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
-}
-function fbm(x: number, y: number) {
-  let h = 0, amp = 0.5, f = 1;
-  for (let o = 0; o < 4; o++) {
-    h += amp * vnoise(x * f, y * f);
-    amp *= 0.5;
-    f *= 2.03;
-  }
-  return h; // ~0..1
-}
-/** Dune height at world (x, z): long ridges stretched along x + detail. */
-function duneHeight(x: number, z: number) {
-  const ridges = (fbm(x * 0.032, z * 0.011) - 0.5) * 5.2;
-  const detail = (fbm(x * 0.09 + 7.3, z * 0.09 + 3.1) - 0.5) * 1.1;
-  const d = Math.hypot(x, z);
-  const t = Math.min(1, Math.max(0, (d - PLAZA_RADIUS) / (PLAZA_BLEND - PLAZA_RADIUS)));
-  const blend = t * t * (3 - 2 * t);
-  return 0.05 + (ridges + detail) * blend;
-}
-
-const ROCK_SPOTS: Array<[number, number, number]> = [
-  // [x, z, radius] — all ≥ 22 m from the centre, clear of every waypoint
-  [24, 18, 1.5], [-30, 10, 2.0], [18, -28, 1.2], [-22, -26, 1.7],
-  [40, -12, 2.4], [-14, 34, 1.3], [34, 30, 1.8], [-42, -18, 2.2], [8, 44, 1.6],
-];
-
 function DesertEnvironment({ progress }: { progress: number }) {
-  const terrainMat = useRef<MeshStandardMaterial>(null);
-
-  const terrain = useMemo(() => {
-    const geo = new PlaneGeometry(400, 400, 150, 150);
-    geo.rotateX(-Math.PI / 2);
-    const pos = geo.attributes.position;
-    const colors = new Float32Array(pos.count * 3);
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i), z = pos.getZ(i);
-      const h = duneHeight(x, z);
-      pos.setY(i, h);
-      // sun-kissed crests, dark hollows + per-vertex grain
-      const crest = Math.min(1, Math.max(0, (h - 0.05) / 3));
-      const g = hash2(Math.round(x * 10), Math.round(z * 10)) * 0.08;
-      colors[i * 3] = 0.42 + crest * 0.30 + g;
-      colors[i * 3 + 1] = 0.31 + crest * 0.22 + g;
-      colors[i * 3 + 2] = 0.17 + crest * 0.11 + g;
-    }
-    geo.setAttribute("color", new BufferAttribute(colors, 3));
-    geo.computeVertexNormals();
-    return geo;
-  }, []);
-
-  const rocks = useMemo(
-    () =>
-      ROCK_SPOTS.map(([x, z, r], i) => {
-        const geo = new IcosahedronGeometry(r, 1);
-        const pos = geo.attributes.position;
-        for (let k = 0; k < pos.count; k++) {
-          const j = 0.72 + hash2(k * 3.1 + i * 17.7, k * 1.7) * 0.55;
-          pos.setXYZ(k, pos.getX(k) * j, pos.getY(k) * j * 0.62, pos.getZ(k) * j);
-        }
-        geo.computeVertexNormals();
-        return { geo, x, z, y: duneHeight(x, z) + r * 0.18 };
-      }),
-    [],
-  );
-
-  const rockMaterial = useMemo(
-    () => new MeshStandardMaterial({ color: "#5d4930", roughness: 1, metalness: 0, flatShading: true }),
-    [],
-  );
-
-  useFrame(() => {
-    // same wake/night curve as the model — ground and building share one mood
-    const wake = smoothstep(progress, 0, 0.06);
-    const night = smoothstep(progress, 0.55, 0.98);
-    const dim = (1 - 0.82 * (1 - wake)) * (1 - 0.45 * night);
-    if (terrainMat.current) terrainMat.current.color.setScalar(dim);
-    rockMaterial.color.setScalar(dim);
-  });
-
-  return (
-    <group>
-      <mesh geometry={terrain} receiveShadow={false}>
-        <meshStandardMaterial ref={terrainMat} vertexColors roughness={1} metalness={0} />
-      </mesh>
-      {rocks.map((r, i) => (
-        <mesh key={i} geometry={r.geo} material={rockMaterial} position={[r.x, r.y, r.z]} />
-      ))}
-    </group>
-  );
+  const wake = smoothstep(progress, 0, 0.06);
+  const night = smoothstep(progress, 0.55, 0.98);
+  const dim = (1 - 0.82 * (1 - wake)) * (1 - 0.45 * night);
+  return <Desert dim={dim} />;
 }
 
 function ScrollCamera({ progress }: { progress: number }) {
@@ -710,7 +605,7 @@ export default function KasbahTour({
         {webglOk ? (
           <Canvas
             className="pointer-events-none"
-            camera={{ position: shifted([-13.0, 5.5, -11.0]), fov: 55, near: 0.1, far: 2000 }}
+            camera={{ position: shifted([6.0, 4.2, 16.0]), fov: 55, near: 0.1, far: 2000 }}
             dpr={[1, 2]}
             frameloop={fullyFaded ? "never" : "always"}
             gl={{ antialias: true, localClippingEnabled: false }}

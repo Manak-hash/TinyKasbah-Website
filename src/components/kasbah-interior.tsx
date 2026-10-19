@@ -21,6 +21,7 @@ import {
   Mountain,
 } from "lucide-react";
 import type { Dictionary } from "@/i18n/dictionaries";
+import Desert from "@/components/desert-environment";
 
 const MODEL_URL = "/models/kasbah.glb";
 
@@ -454,6 +455,11 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
           }}
         >
           <SkyMood time={time} />
+
+          {/* the kasbah stands in a desert — same dunes as the homepage tour
+              (centre offset: this page re-centres on the hall, [4.3, 0.1];
+              dim damped — the noon sun here is stronger than the tour's) */}
+          <Desert dim={0.6} center={[0.25, -1.55]} />
 
           {/* daylight through the openings */}
           <ambientLight intensity={ambientIntensity(time)} />
