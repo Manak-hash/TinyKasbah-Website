@@ -2,15 +2,15 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { BackSide, Box3, Color, Group } from "three";
-import type { ShaderMaterial } from "three";
+import { BackSide, Box3, Color, DoubleSide, Group } from "three";
+import type { Material, ShaderMaterial } from "three";
 import { Html, useGLTF } from "@react-three/drei";
 import { ArrowDown, Loader2 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
-import { SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
+import { GROUND_FRAG, GROUND_VERT, SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
 
 const MODEL_URL = "/models/kasbah.glb";
 
@@ -185,33 +185,97 @@ function DesertNightSky({ progress }: { progress: number }) {
   );
 }
 
+/**
+ * Model dims + the dollhouse cutaway. ONE opacity authority lives here:
+ * every material's opacity is recomputed each frame from scroll progress
+ *
+ *   hero    — smoothstep(0 -> 0.06): the kasbah wakes up after the hero
+ *   night   — smoothstep(0.55 -> 0.98): the model recedes into the night
+ *   roofCut — smoothstep(0.80 -> 0.88): roofline dissolves (slabs, parapets,
+ *             pergola slats, skylight ring — everything measured above Y 2.55)
+ *   wallCut — smoothstep(0.86 -> 0.94): the north + east walls dissolve, so
+ *             the parked NE aerial looks straight down into the four salons
+ *             and the dome hall: the glowing dollhouse the DOM chapters
+ *             scroll over. Scrolling back up reassembles the building.
+ *
+ * Dissolved meshes get cloned materials (the GLB shares 42 materials across
+ * 398 meshes) so the cut never touches chapters 1-4, which stay intact.
+ */
+const ROOF_CUT_MIN_Y = 2.55; // measured: everything above this is roofline
+const WALL_CUT_MESHES = ["6d228080", "a004a154"]; // north wall / east wall (measured)
+
 function Model({ url, progress }: { url: string; progress: number }) {
   const group = useRef<Group>(null);
   const { scene } = useGLTF(url);
   const centered = useRef(false);
+  // material registries, filled once during classification
+  const mats = useMemo(
+    () => ({ all: [] as Material[], roof: [] as Material[], wall: [] as Material[] }),
+    [],
+  );
 
   useEffect(() => {
     if (centered.current || !group.current) return;
     centered.current = true;
+    const box = new Box3().setFromObject(scene);
+    // Classify in RAW GLB space (the group is still unshifted here).
+    // Idempotent: on remount (strict-mode/HMR) meshes already carry their
+    // cut clones via userData.cutRole and are simply re-registered.
+    const seen = new Set<Material>();
+    const register = (m: Material, role: "roof" | "wall" | null) => {
+      if (!seen.has(m)) {
+        seen.add(m);
+        mats.all.push(m);
+      }
+      if (role) mats[role].push(m);
+    };
+    scene.traverse((obj) => {
+      const mesh = obj as import("three").Mesh;
+      if (!mesh.isMesh) return;
+      const bb = new Box3().setFromObject(mesh);
+      const spanX = bb.max.x - bb.min.x;
+      const spanZ = bb.max.z - bb.min.z;
+      // the plinth slab the GLB ships on — replaced by the ground disc
+      if (bb.min.y <= -0.05 && spanX > 5 && spanZ > 5) {
+        mesh.visible = false;
+        return;
+      }
+      let role = mesh.userData.cutRole as "roof" | "wall" | undefined;
+      if (!role) {
+        if (bb.min.y >= ROOF_CUT_MIN_Y) role = "roof";
+        else if (WALL_CUT_MESHES.some((id) => mesh.name.includes(id))) role = "wall";
+      }
+      if (!role) {
+        for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) register(m, null);
+        return;
+      }
+      if (!mesh.userData.cutRole) {
+        mesh.userData.cutRole = role;
+        const orig = mesh.material as Material | Material[];
+        const clones = (Array.isArray(orig) ? orig : [orig]).map((m) => {
+          const c = m.clone();
+          c.transparent = true;
+          c.side = DoubleSide; // faded walls must not lose their inner face
+          return c;
+        });
+        mesh.material = Array.isArray(orig) ? clones : clones[0];
+      }
+      for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) register(m, role);
+    });
     // Shift the model so raw-GLB CENTER lands at 0 — matching the waypoints
     // (authored in raw GLB space from measured geometry). Floor stays at Y=0.
-    const box = new Box3().setFromObject(scene);
     group.current.position.set(-CENTER[0], -box.min.y, -CENTER[1]);
-  }, [scene]);
+  }, [scene, mats]);
 
-  // The model recedes into the night during the aerial park (chapter 4):
-  // a scene-side dim, the same philosophy as HeroDim — never scrims.
   useFrame(() => {
-    if (!group.current) return;
+    const hero = smoothstep(progress, 0, 0.06);
     const night = smoothstep(progress, 0.55, 0.98);
-    const dim = 1 - 0.5 * smoothstep(night, 0.5, 1);
-    group.current.traverse((obj) => {
-      const mesh = obj as { material?: { opacity?: number; transparent?: boolean } };
-      if (mesh.material) {
-        mesh.material.transparent = true;
-        mesh.material.opacity = dim;
-      }
-    });
+    const roofCut = smoothstep(progress, 0.8, 0.88);
+    const wallCut = smoothstep(progress, 0.86, 0.94);
+    const base = (1 - 0.82 * hero) * (1 - 0.45 * night);
+    for (const m of mats.all) m.opacity = base;
+    for (const m of mats.roof) m.opacity = base * (1 - roofCut);
+    for (const m of mats.wall) m.opacity = base * (1 - wallCut);
   });
 
   return (
@@ -222,32 +286,19 @@ function Model({ url, progress }: { url: string; progress: number }) {
 }
 
 /**
- * HeroDim — scene-side readability for the hero text.
- * While the hero overlay is up (progress ~ 0) the MODEL is dimmed.
- * Scroll restores everything progressively, so the text stays bare
- * (no scrim boxes) yet high-contrast, and the kasbah "wakes up".
+ * HeroDim — scene-side readability for the hero text. While the hero
+ * overlay is up the AMBIENT falls (the model dim itself now lives in
+ * Model's single opacity authority), so the text stays bare yet
+ * high-contrast and the kasbah "wakes up" as the visitor enters the tour.
  */
 function HeroDim({ progress, children }: { progress: number; children: React.ReactNode }) {
-  const group = useRef<Group>(null);
   // 1 = fully dimmed (hero), 0 = fully lit (tour). Smoothstep kills the seam.
   const t = Math.min(1, progress / 0.06);
   const dim = 1 - t * t * (3 - 2 * t);
 
-  useFrame(() => {
-    if (group.current) {
-      group.current.traverse((obj) => {
-        const mesh = obj as { material?: { opacity?: number; transparent?: boolean } };
-        if (mesh.material) {
-          mesh.material.transparent = true;
-          mesh.material.opacity = 1 - 0.82 * dim;
-        }
-      });
-    }
-  });
-
   return (
     <>
-      <group ref={group}>{children}</group>
+      <group>{children}</group>
       <ambientLight intensity={0.9 - 0.72 * dim} />
     </>
   );
@@ -262,6 +313,41 @@ function ExposureRig({ progress }: { progress: number }) {
     gl.toneMappingExposure = 1.05 - 0.5 * night;
   });
   return null;
+}
+
+/**
+ * DuskGround — the fading desert disc that replaces the GLB's rectangular
+ * plinth slab. Renders below the building floor (Y 0.05 vs floor 0.15),
+ * fades radially into the night sky, and shares the model's mood curve.
+ */
+function DuskGround({ progress }: { progress: number }) {
+  const uniforms = useMemo(
+    () => ({
+      uDim: { value: 1 },
+      uSand: { value: new Color("#6a4a24") },
+      uSandDark: { value: new Color("#1f1409") },
+    }),
+    [],
+  );
+
+  useFrame(() => {
+    const hero = smoothstep(progress, 0, 0.06);
+    const night = smoothstep(progress, 0.55, 0.98);
+    uniforms.uDim.value = (1 - 0.82 * hero) * (1 - 0.45 * night);
+  });
+
+  return (
+    <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-0.5}>
+      <circleGeometry args={[40, 64]} />
+      <shaderMaterial
+        transparent
+        depthWrite
+        uniforms={uniforms}
+        vertexShader={GROUND_VERT}
+        fragmentShader={GROUND_FRAG}
+      />
+    </mesh>
+  );
 }
 
 function ScrollCamera({ progress }: { progress: number }) {
@@ -533,6 +619,7 @@ export default function KasbahTour({
             }}
           >
             <DesertNightSky progress={progress} />
+            <DuskGround progress={progress} />
 
             {/* HeroDim owns ambient while the hero is up (0.9 -> 0.18).
                 Directional + interior lights fade with the same curve. */}

@@ -77,3 +77,49 @@ const SKY_FRAG = /* glsl */ `
 `;
 
 export { SKY_VERT, SKY_FRAG };
+
+/**
+ * Ground plane under the kasbah — replaces the rectangular plinth slab the
+ * GLB ships with. A large disc that fades radially into the night sky, so
+ * the model sits in desert light instead of on a "cake board". A faint
+ * directional banding reads as wind-combed sand up close; the whole plane
+ * dims with the same hero/night curve as the model so ground and building
+ * always share one mood. The edge cut is invisible against the dark sky.
+ */
+const GROUND_VERT = /* glsl */ `
+  varying vec2 vLocal;
+  void main() {
+    vLocal = position.xy;   // circleGeometry lies in the local XY plane
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const GROUND_FRAG = /* glsl */ `
+  varying vec2 vLocal;
+  uniform float uDim;       // shared hero/night dim (1 = lit, <1 = faded)
+  uniform vec3  uSand;      // lit sand near the building
+  uniform vec3  uSandDark;  // desert falling away into the dark
+
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+  }
+
+  void main() {
+    float r = length(vLocal) / 40.0;   // 0 at centre, 1 at the rim
+    vec3 col = mix(uSand, uSandDark, smoothstep(0.08, 0.5, r));
+
+    // wind-combed banding: slow diagonal waves, stronger near the building
+    float band = sin(vLocal.x * 0.55 + sin(vLocal.y * 0.30) * 2.2) * 0.5 + 0.5;
+    col *= 0.90 + 0.10 * band * (1.0 - smoothstep(0.2, 0.6, r));
+
+    // sparse grain so the fade never bands
+    col += (hash(vLocal * 18.0) - 0.5) * 0.02;
+
+    col *= uDim;
+    float alpha = (1.0 - smoothstep(0.42, 0.9, r)) * 0.97;
+    if (alpha < 0.02) discard;   // rim pixels cut clean against the sky
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+export { GROUND_VERT, GROUND_FRAG };

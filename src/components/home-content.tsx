@@ -82,7 +82,7 @@ export default function HomeContent({
             <div className="mt-4 h-px w-16 bg-gold/70" aria-hidden />
             <p className="mt-6 max-w-xl text-sand/75 leading-relaxed">{dict.contact.intro}</p>
 
-            <div className="mt-10 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+            <div className="mt-10 flex flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:justify-center">
               <a
                 href="mailto:contact@terrevolution.ma"
                 className="inline-flex items-center gap-3 rounded-full bg-clay hover:bg-clay/90 px-7 py-3.5 text-white text-sm font-medium transition-colors"
@@ -118,7 +118,7 @@ export default function HomeContent({
               </div>
             </div>
 
-            <div className="mt-16 border-t border-sand/10 pt-8">
+            <div className="mt-16 border-t border-sand/10 pt-8 text-center">
               <p className="text-xs text-sand/50">{dict.common.brandTagline}</p>
               <p className="mt-3 text-xs text-sand/40">{dict.contact.followLaunch}</p>
               <p className="mt-3 text-xs text-sand/40">
