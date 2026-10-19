@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { BackSide, Box3, Color, DoubleSide, Group } from "three";
+import { BackSide, Box3, BufferAttribute, Color, DoubleSide, Group, IcosahedronGeometry, MeshStandardMaterial, PlaneGeometry } from "three";
 import type { Material, ShaderMaterial } from "three";
 import { Html, useGLTF } from "@react-three/drei";
 import { ArrowDown, Loader2 } from "lucide-react";
@@ -10,7 +10,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
-import { GROUND_FRAG, GROUND_VERT, SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
+import { SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
 
 const MODEL_URL = "/models/kasbah.glb";
 
@@ -44,11 +44,12 @@ type Waypoint = {
 };
 
 const STOPS: Waypoint[] = [
-  // ── Chapter 1 — L'entrée: distant dusk three-quarter → dolly to west entrance
-  { pos: [-13.0, 5.5, -11.0], target: [3.8, 1.4, -1.4], chapter: 0 },
-  { pos: [-9.5, 4.2, -7.5], target: [3.6, 1.4, -1.5], chapter: 0 },
-  { pos: [-7.0, 2.9, -4.6], target: [2.6, 1.3, -1.6], chapter: 0 },
-  { pos: [-5.2, 2.0, -1.6], target: [0.4, 1.3, -1.6], chapter: 0 },
+  // ── Chapter 1 — L'entrée: axial approach straight onto the two-door
+  //    entrance wall (west façade, vestibule at X -0.7..1.26, Z -1.9..-1.3)
+  { pos: [-15.0, 4.4, -3.0], target: [0.3, 1.4, -1.6], chapter: 0 },
+  { pos: [-10.5, 3.0, -2.2], target: [0.3, 1.4, -1.6], chapter: 0 },
+  { pos: [-7.2, 2.2, -1.8], target: [0.4, 1.4, -1.6], chapter: 0 },
+  { pos: [-5.2, 1.9, -1.6], target: [0.4, 1.3, -1.6], chapter: 0 },
   // ── Chapter 2 — Compact & réplicable: pull back to a straight-on elevation
   { pos: [-7.4, 2.6, -1.6], target: [1.4, 1.2, -1.45], chapter: 1 },
   { pos: [-11.8, 4.6, -1.45], target: [3.4, 0.9, -1.45], chapter: 1 },
@@ -202,7 +203,6 @@ function DesertNightSky({ progress }: { progress: number }) {
  * 398 meshes) so the cut never touches chapters 1-4, which stay intact.
  */
 const ROOF_CUT_MIN_Y = 2.55; // measured: everything above this is roofline
-const WALL_CUT_MESHES = ["6d228080", "a004a154"]; // north wall / east wall (measured)
 
 function Model({ url, progress }: { url: string; progress: number }) {
   const group = useRef<Group>(null);
@@ -243,7 +243,16 @@ function Model({ url, progress }: { url: string; progress: number }) {
       let role = mesh.userData.cutRole as "roof" | "wall" | undefined;
       if (!role) {
         if (bb.min.y >= ROOF_CUT_MIN_Y) role = "roof";
-        else if (WALL_CUT_MESHES.some((id) => mesh.name.includes(id))) role = "wall";
+        // Walls open WITH everything mounted on them: windows, frames,
+        // screens, curtains. Band test on the two walls facing the parked
+        // NE aerial (measured: north wall Z 1.62..1.75, east X 7.4..7.5).
+        // Vertical things only (max.y > 1) so courtyard paving stays.
+        else if (
+          bb.max.y > 1.0 &&
+          ((bb.min.z > 1.2 && bb.max.z < 2.8 && bb.max.x > 1.2 && bb.min.x < 7.6) || // north side
+            (bb.min.x > 7.2 && bb.max.x < 9.7 && bb.min.z > -1.6 && bb.max.z < 1.8)) // east side
+        )
+          role = "wall";
       }
       if (!role) {
         for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) register(m, null);
@@ -268,11 +277,12 @@ function Model({ url, progress }: { url: string; progress: number }) {
   }, [scene, mats]);
 
   useFrame(() => {
-    const hero = smoothstep(progress, 0, 0.06);
+    // wake: 0 at the hero (model dimmed for the title) -> 1 once the tour starts
+    const wake = smoothstep(progress, 0, 0.06);
     const night = smoothstep(progress, 0.55, 0.98);
     const roofCut = smoothstep(progress, 0.8, 0.88);
     const wallCut = smoothstep(progress, 0.86, 0.94);
-    const base = (1 - 0.82 * hero) * (1 - 0.45 * night);
+    const base = (1 - 0.82 * (1 - wake)) * (1 - 0.45 * night);
     for (const m of mats.all) m.opacity = base;
     for (const m of mats.roof) m.opacity = base * (1 - roofCut);
     for (const m of mats.wall) m.opacity = base * (1 - wallCut);
@@ -316,37 +326,124 @@ function ExposureRig({ progress }: { progress: number }) {
 }
 
 /**
- * DuskGround — the fading desert disc that replaces the GLB's rectangular
- * plinth slab. Renders below the building floor (Y 0.05 vs floor 0.15),
- * fades radially into the night sky, and shares the model's mood curve.
+ * DesertEnvironment — procedural dune terrain + scattered rocks that
+ * replaces both the GLB's rectangular plinth slab AND the flat disc: the
+ * kasbah now stands in a desert, not on a cake board.
+ *
+ * - Terrain: 400 × 400 m plane displaced by value-noise dunes (long
+ *   anisotropic ridges + detail octaves), flattened to a plaza under the
+ *   building (r < 14 m, blended out by 36 m) so nothing pokes through the
+ *   model's floor. Opaque + scene fog (#231a10, 60..220 m) swallows the
+ *   horizon, so there is no edge and no see-through anywhere.
+ * - Rocks: 9 half-buried, jittered icosahedra at 22 m+ from the centre —
+ *   camera waypoints never exceed r ≈ 15 m and y ≥ 1.9, so by construction
+ *   they stay clear of the validated path (and the GLB validator is
+ *   unaffected: this geometry is not part of the model).
+ * - Mood: terrain/rock colors are scaled by the same hero/night dim as the
+ *   model (color multiplication keeps the materials opaque — transparency
+ *   here would reintroduce sorting artifacts against the cutaway).
  */
-function DuskGround({ progress }: { progress: number }) {
-  const uniforms = useMemo(
-    () => ({
-      uDim: { value: 1 },
-      uSand: { value: new Color("#6a4a24") },
-      uSandDark: { value: new Color("#1f1409") },
-    }),
+const PLAZA_RADIUS = 14;
+const PLAZA_BLEND = 36;
+
+function hash2(i: number, j: number) {
+  const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
+  return s - Math.floor(s);
+}
+function vnoise(x: number, y: number) {
+  const xi = Math.floor(x), yi = Math.floor(y);
+  const xf = x - xi, yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function fbm(x: number, y: number) {
+  let h = 0, amp = 0.5, f = 1;
+  for (let o = 0; o < 4; o++) {
+    h += amp * vnoise(x * f, y * f);
+    amp *= 0.5;
+    f *= 2.03;
+  }
+  return h; // ~0..1
+}
+/** Dune height at world (x, z): long ridges stretched along x + detail. */
+function duneHeight(x: number, z: number) {
+  const ridges = (fbm(x * 0.032, z * 0.011) - 0.5) * 5.2;
+  const detail = (fbm(x * 0.09 + 7.3, z * 0.09 + 3.1) - 0.5) * 1.1;
+  const d = Math.hypot(x, z);
+  const t = Math.min(1, Math.max(0, (d - PLAZA_RADIUS) / (PLAZA_BLEND - PLAZA_RADIUS)));
+  const blend = t * t * (3 - 2 * t);
+  return 0.05 + (ridges + detail) * blend;
+}
+
+const ROCK_SPOTS: Array<[number, number, number]> = [
+  // [x, z, radius] — all ≥ 22 m from the centre, clear of every waypoint
+  [24, 18, 1.5], [-30, 10, 2.0], [18, -28, 1.2], [-22, -26, 1.7],
+  [40, -12, 2.4], [-14, 34, 1.3], [34, 30, 1.8], [-42, -18, 2.2], [8, 44, 1.6],
+];
+
+function DesertEnvironment({ progress }: { progress: number }) {
+  const terrainMat = useRef<MeshStandardMaterial>(null);
+
+  const terrain = useMemo(() => {
+    const geo = new PlaneGeometry(400, 400, 150, 150);
+    geo.rotateX(-Math.PI / 2);
+    const pos = geo.attributes.position;
+    const colors = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), z = pos.getZ(i);
+      const h = duneHeight(x, z);
+      pos.setY(i, h);
+      // sun-kissed crests, dark hollows + per-vertex grain
+      const crest = Math.min(1, Math.max(0, (h - 0.05) / 3));
+      const g = hash2(Math.round(x * 10), Math.round(z * 10)) * 0.08;
+      colors[i * 3] = 0.42 + crest * 0.30 + g;
+      colors[i * 3 + 1] = 0.31 + crest * 0.22 + g;
+      colors[i * 3 + 2] = 0.17 + crest * 0.11 + g;
+    }
+    geo.setAttribute("color", new BufferAttribute(colors, 3));
+    geo.computeVertexNormals();
+    return geo;
+  }, []);
+
+  const rocks = useMemo(
+    () =>
+      ROCK_SPOTS.map(([x, z, r], i) => {
+        const geo = new IcosahedronGeometry(r, 1);
+        const pos = geo.attributes.position;
+        for (let k = 0; k < pos.count; k++) {
+          const j = 0.72 + hash2(k * 3.1 + i * 17.7, k * 1.7) * 0.55;
+          pos.setXYZ(k, pos.getX(k) * j, pos.getY(k) * j * 0.62, pos.getZ(k) * j);
+        }
+        geo.computeVertexNormals();
+        return { geo, x, z, y: duneHeight(x, z) + r * 0.18 };
+      }),
+    [],
+  );
+
+  const rockMaterial = useMemo(
+    () => new MeshStandardMaterial({ color: "#5d4930", roughness: 1, metalness: 0, flatShading: true }),
     [],
   );
 
   useFrame(() => {
-    const hero = smoothstep(progress, 0, 0.06);
+    // same wake/night curve as the model — ground and building share one mood
+    const wake = smoothstep(progress, 0, 0.06);
     const night = smoothstep(progress, 0.55, 0.98);
-    uniforms.uDim.value = (1 - 0.82 * hero) * (1 - 0.45 * night);
+    const dim = (1 - 0.82 * (1 - wake)) * (1 - 0.45 * night);
+    if (terrainMat.current) terrainMat.current.color.setScalar(dim);
+    rockMaterial.color.setScalar(dim);
   });
 
   return (
-    <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-0.5}>
-      <circleGeometry args={[40, 64]} />
-      <shaderMaterial
-        transparent
-        depthWrite
-        uniforms={uniforms}
-        vertexShader={GROUND_VERT}
-        fragmentShader={GROUND_FRAG}
-      />
-    </mesh>
+    <group>
+      <mesh geometry={terrain} receiveShadow={false}>
+        <meshStandardMaterial ref={terrainMat} vertexColors roughness={1} metalness={0} />
+      </mesh>
+      {rocks.map((r, i) => (
+        <mesh key={i} geometry={r.geo} material={rockMaterial} position={[r.x, r.y, r.z]} />
+      ))}
+    </group>
   );
 }
 
@@ -622,7 +719,7 @@ export default function KasbahTour({
             }}
           >
             <DesertNightSky progress={progress} />
-            <DuskGround progress={progress} />
+            <DesertEnvironment progress={progress} />
 
             {/* HeroDim owns ambient while the hero is up (0.9 -> 0.18).
                 Directional + interior lights fade with the same curve. */}
