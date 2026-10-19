@@ -301,14 +301,11 @@ function Model({ url }: { url: string }) {
   }, [scene, mats]);
 
   useFrame(() => {
-    // wake: 0 at the very top of the page (model fully invisible under the
-    // hero title) -> 1 once the tour starts; night pulls it back down for
-    // the dollhouse beat.
-    const wake = smoothstep(tour.progress, 0, 0.06);
     const night = smoothstep(tour.progress, 0.55, 0.98);
     const roofCut = smoothstep(tour.progress, 0.8, 0.88);
     const wallCut = smoothstep(tour.progress, 0.86, 0.94);
-    const base = wake * (1 - 0.45 * night);
+    // fully visible at the top; only the night beat pulls it back
+    const base = 1 - 0.45 * night;
     for (const m of mats.all) m.opacity = base;
     for (const m of mats.roof) m.opacity = base * (1 - roofCut);
     for (const m of mats.wall) m.opacity = base * (1 - wallCut);
@@ -333,11 +330,10 @@ function SceneLights() {
   const FILL = [14, 10, 10, 10, 7];
 
   useFrame(() => {
-    const wake = smoothstep(tour.progress, 0, 0.06);
     const night = smoothstep(tour.progress, 0.55, 0.98);
-    if (amb.current) amb.current.intensity = (0.18 + 0.72 * wake) * (1 - 0.3 * night);
+    if (amb.current) amb.current.intensity = 0.9 * (1 - 0.3 * night);
     fills.current.forEach((l, i) => {
-      if (l) l.intensity = FILL[i] * wake * (1 - 0.4 * night);
+      if (l) l.intensity = FILL[i] * (1 - 0.4 * night);
     });
   });
 

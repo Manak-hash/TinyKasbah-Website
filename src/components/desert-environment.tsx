@@ -131,9 +131,8 @@ export default function DesertEnvironment({
     let d = dim;
     if (progressRef) {
       const p = progressRef.progress;
-      const wake = sstep(p, 0, 0.06);
       const night = sstep(p, 0.55, 0.98);
-      d = wake * (1 - 0.45 * night);
+      d = 1 - 0.45 * night;
     }
     if (terrainMat.current) terrainMat.current.color.setScalar(d);
     rockMaterial.color.setScalar(d);

@@ -31,24 +31,22 @@ export default function HomeContent({
       <KasbahTour dict={dict} locale={locale} conceptPath={conceptPath}>
         {/* ---------- Chapter 5 — Usages ---------- */}
         <section data-chapter-dom className="border-t border-sand/10">
-          <div className="max-w-6xl mx-auto px-5 sm:px-6 py-20 md:py-32">
+          <div className="max-w-6xl mx-auto px-5 sm:px-6 py-20 md:py-32 text-center">
             <p className="text-xs tracking-[0.3em] uppercase text-teal">{dict.usages.kicker}</p>
             <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold tracking-tight">
               {dict.usages.title}
             </h2>
-            <div className="mt-4 h-px w-16 bg-gold/70" aria-hidden />
-            <p className="mt-6 max-w-xl text-sand/75 leading-relaxed">{dict.usages.intro}</p>
+            <div className="mt-4 mx-auto h-px w-16 bg-gold/70" aria-hidden />
+            <p className="mt-6 mx-auto max-w-xl text-sand/75 leading-relaxed">{dict.usages.intro}</p>
 
             <ol className="mt-12 md:mt-16 grid grid-cols-1 md:grid-cols-2 gap-x-14 gap-y-10">
               {dict.usages.items.map((item, i) => (
-                <li key={item.title} className="flex items-start gap-5">
+                <li key={item.title} className="flex flex-col items-center gap-2 text-center">
                   <span className="font-display text-2xl md:text-3xl leading-none text-gold/85" aria-hidden>
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span>
-                    <h3 className="font-semibold text-lg">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-sand/65">{item.text}</p>
-                  </span>
+                  <h3 className="font-semibold text-lg">{item.title}</h3>
+                  <p className="max-w-sm text-sm leading-relaxed text-sand/65">{item.text}</p>
                 </li>
               ))}
             </ol>
@@ -57,14 +55,14 @@ export default function HomeContent({
 
         {/* ---------- Chapter 6 — Partenaires ---------- */}
         <section data-chapter-dom className="border-t border-sand/10">
-          <div className="max-w-6xl mx-auto px-5 sm:px-6 py-20 md:py-32">
+          <div className="max-w-6xl mx-auto px-5 sm:px-6 py-20 md:py-32 text-center">
             <p className="text-xs tracking-[0.3em] uppercase text-teal">{dict.partners.kicker}</p>
             <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold tracking-tight">
               {dict.partners.title}
             </h2>
-            <div className="mt-4 h-px w-16 bg-gold/70" aria-hidden />
+            <div className="mt-4 mx-auto h-px w-16 bg-gold/70" aria-hidden />
             <p className="mt-6 font-semibold text-lg">{dict.partners.intro}</p>
-            <p className="mt-4 max-w-xl text-sand/75 leading-relaxed">{dict.partners.body}</p>
+            <p className="mt-4 mx-auto max-w-xl text-sand/75 leading-relaxed">{dict.partners.body}</p>
 
             <div className="mt-12">
               <PartnerCredits dict={dict} />
@@ -74,13 +72,13 @@ export default function HomeContent({
 
         {/* ---------- Chapter 7 — Contact (the old footer is folded in) ---------- */}
         <section data-chapter-dom className="border-t border-sand/10">
-          <div className="max-w-6xl mx-auto px-5 sm:px-6 pt-20 md:pt-32 pb-14 md:pb-16">
+          <div className="max-w-6xl mx-auto px-5 sm:px-6 pt-20 md:pt-32 pb-14 md:pb-16 text-center">
             <p className="text-xs tracking-[0.3em] uppercase text-teal">{dict.contact.kicker}</p>
             <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold tracking-tight">
               {dict.contact.title}
             </h2>
-            <div className="mt-4 h-px w-16 bg-gold/70" aria-hidden />
-            <p className="mt-6 max-w-xl text-sand/75 leading-relaxed">{dict.contact.intro}</p>
+            <div className="mt-4 mx-auto h-px w-16 bg-gold/70" aria-hidden />
+            <p className="mt-6 mx-auto max-w-xl text-sand/75 leading-relaxed">{dict.contact.intro}</p>
 
             <div className="mt-10 flex flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:justify-center">
               <a
