@@ -562,6 +562,48 @@ function ProgressRail({
   );
 }
 
+/**
+ * HeroKicker — the line above the hero title. With the Denkmal mention
+ * enabled it crossfades between "Un concept Terrevolution" and the fair
+ * badge every ~6.7 s: blur + rise out, settle in from below with the
+ * letter-spacing tightening. Quiet and premium — no slides, no spins.
+ * Falls back to a static line when reduced motion is preferred.
+ */
+function HeroKicker({ phrases, cycle }: { phrases: string[]; cycle: boolean }) {
+  const reduce = useReducedMotion();
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (!cycle || phrases.length < 2) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % phrases.length), 6700);
+    return () => clearInterval(t);
+  }, [cycle, phrases.length]);
+
+  const text = phrases[Math.min(idx, phrases.length - 1)];
+  const cls =
+    "absolute whitespace-nowrap text-[9px] md:text-xs uppercase text-gold/90 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)]";
+
+  if (!cycle || phrases.length < 2) {
+    return <p className={cls + " static"} style={{ letterSpacing: "0.45em" }}>{text}</p>;
+  }
+  return (
+    <div className="relative h-5 md:h-6 w-full flex items-center justify-center">
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={text}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 5, letterSpacing: "0.52em" }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, letterSpacing: "0.45em" }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, y: -5, letterSpacing: "0.52em" }}
+          transition={{ duration: reduce ? 0.4 : 0.8, ease: "easeOut" }}
+          className={cls}
+        >
+          {text}
+        </motion.p>
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function KasbahTour({
   dict,
   locale,
@@ -714,14 +756,10 @@ export default function KasbahTour({
           }`}
         >
           <div className="absolute top-[44%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-6 text-center">
-            <p className="text-[11px] md:text-xs tracking-[0.45em] uppercase text-gold/90 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)]">
-              {dict.hero.kicker}
-            </p>
-            {showDenkmal && (
-              <p className="mt-4 inline-flex items-center rounded-full border border-gold/25 bg-[#0e0a06]/60 px-4 py-1.5 text-[9px] md:text-[10px] tracking-[0.25em] uppercase text-gold/90 backdrop-blur-sm">
-                {dict.denkmal.badge}
-              </p>
-            )}
+            <HeroKicker
+              phrases={showDenkmal ? [dict.hero.kicker, dict.denkmal.badge] : [dict.hero.kicker]}
+              cycle={showDenkmal}
+            />
             <h1 className="mt-4 text-6xl md:text-8xl font-bold tracking-tight font-display drop-shadow-[0_2px_20px_rgba(0,0,0,0.85)]">
               {dict.hero.title1}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-clay to-teal">
