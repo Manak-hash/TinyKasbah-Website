@@ -27,6 +27,10 @@ const de: Messages = {
   concept: {
     backToTour: "Außenrundgang",
   },
+  denkmal: {
+    badge: "Ausgestellt auf der Denkmal · Leipzig 2026",
+    line: "Besuchen Sie uns auf der Denkmal Leipzig 2026 · 5.–7. November · Halle 2, Stand F09-1",
+  },
   tour: {
     ch1: {
       title: "Der Eingang",

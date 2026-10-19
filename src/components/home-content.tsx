@@ -4,7 +4,7 @@ import KasbahTour from "@/components/kasbah-tour";
 import BrandMark from "@/components/brand-mark";
 import PartnerCredits from "@/components/partner-credits";
 import { Mail, MessageCircle } from "lucide-react";
-import { INSTAGRAM_URL, WHATSAPP_URL } from "@/lib/contacts";
+import { DENKMAL_LIVE, INSTAGRAM_URL, WHATSAPP_URL } from "@/lib/contacts";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
 
@@ -55,7 +55,7 @@ export default function HomeContent({
 
         {/* ---------- Chapter 6 — Partenaires ---------- */}
         <section data-chapter-dom className="border-t border-sand/10">
-          <div className="max-w-6xl mx-auto px-5 sm:px-6 pt-14 pb-12 md:pt-24 md:pb-12 text-center">
+          <div className="max-w-6xl mx-auto px-5 sm:px-6 pt-14 pb-8 md:pt-24 md:pb-8 text-center">
             <p className="text-xs tracking-[0.3em] uppercase text-teal">{dict.partners.kicker}</p>
             <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold tracking-tight">
               {dict.partners.title}
@@ -79,6 +79,12 @@ export default function HomeContent({
             </h2>
             <div className="mt-4 mx-auto h-px w-16 bg-gold/70" aria-hidden />
             <p className="mt-6 mx-auto max-w-xl text-sand/75 leading-relaxed">{dict.contact.intro}</p>
+
+            {DENKMAL_LIVE && (
+              <p className="mt-6 text-sm font-medium tracking-wide text-gold/90">
+                {dict.denkmal.line}
+              </p>
+            )}
 
             <div className="mt-10 flex flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:justify-center">
               <a

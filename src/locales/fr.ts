@@ -27,6 +27,10 @@ const fr: Messages = {
   concept: {
     backToTour: "Tour extérieur",
   },
+  denkmal: {
+    badge: "Présent au salon Denkmal · Leipzig 2026",
+    line: "Rencontrez-nous au salon Denkmal Leipzig 2026 · 5–7 novembre · Hall 2, Stand F09-1",
+  },
   tour: {
     ch1: {
       title: "L'entrée",

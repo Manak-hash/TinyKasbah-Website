@@ -9,6 +9,7 @@ import { ArrowDown, Loader2 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Lenis from "lenis";
 import Image from "next/image";
+import { DENKMAL_LIVE } from "@/lib/contacts";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
 import { SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
@@ -572,6 +573,7 @@ export default function KasbahTour({
   conceptPath: string;
   children: React.ReactNode; // DOM chapters 5-7, scrolled over the faded scene
 }) {
+  const showDenkmal = DENKMAL_LIVE;
   const [webglOk, setWebglOk] = useState(true);
   // Quantized UI state — only changes at chapter/visibility boundaries, so
   // scrolling re-renders the DOM layer a handful of times per chapter, not
@@ -715,6 +717,11 @@ export default function KasbahTour({
             <p className="text-[11px] md:text-xs tracking-[0.45em] uppercase text-gold/90 drop-shadow-[0_1px_10px_rgba(0,0,0,0.8)]">
               {dict.hero.kicker}
             </p>
+            {showDenkmal && (
+              <p className="mt-4 inline-flex items-center rounded-full border border-gold/25 bg-[#0e0a06]/60 px-4 py-1.5 text-[9px] md:text-[10px] tracking-[0.25em] uppercase text-gold/90 backdrop-blur-sm">
+                {dict.denkmal.badge}
+              </p>
+            )}
             <h1 className="mt-4 text-6xl md:text-8xl font-bold tracking-tight font-display drop-shadow-[0_2px_20px_rgba(0,0,0,0.85)]">
               {dict.hero.title1}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-clay to-teal">

@@ -25,6 +25,10 @@ const en = {
   concept: {
     backToTour: "Exterior tour",
   },
+  denkmal: {
+    badge: "Present at Denkmal · Leipzig 2026",
+    line: "Meet us at Denkmal Leipzig 2026 · 5–7 November · Hall 2, Stand F09-1",
+  },
   tour: {
     ch1: {
       title: "The entrance",
