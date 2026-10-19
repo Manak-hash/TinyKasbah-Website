@@ -68,12 +68,21 @@ const ROCK_SPOTS: Array<[number, number, number]> = [
   [40, -12, 2.4], [-14, 34, 1.3], [34, 30, 1.8], [-42, -18, 2.2], [8, 44, 1.6],
 ];
 
+function sstep(x: number, a: number, b: number) {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
+
 export default function DesertEnvironment({
   dim = 1,
   center = [0, 0],
+  progressRef,
 }: {
   dim?: number;
   center?: [number, number];
+  /** Live scroll progress (0..1). When given, `dim` is computed per frame
+   *  from the tour's wake/night curve instead of the static prop. */
+  progressRef?: { progress: number };
 }) {
   const terrainMat = useRef<MeshStandardMaterialT>(null);
 
@@ -119,8 +128,15 @@ export default function DesertEnvironment({
   );
 
   useFrame(() => {
-    if (terrainMat.current) terrainMat.current.color.setScalar(dim);
-    rockMaterial.color.setScalar(dim);
+    let d = dim;
+    if (progressRef) {
+      const p = progressRef.progress;
+      const wake = sstep(p, 0, 0.06);
+      const night = sstep(p, 0.55, 0.98);
+      d = wake * (1 - 0.45 * night);
+    }
+    if (terrainMat.current) terrainMat.current.color.setScalar(d);
+    rockMaterial.color.setScalar(d);
   });
 
   return (

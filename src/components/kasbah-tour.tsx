@@ -3,10 +3,11 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { BackSide, Box3, Color, DoubleSide, Group } from "three";
-import type { Material, ShaderMaterial } from "three";
+import type { AmbientLight, Material, PointLight, ShaderMaterial } from "three";
 import { Html, useGLTF } from "@react-three/drei";
 import { ArrowDown, Loader2 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import Lenis from "lenis";
 import Image from "next/image";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
@@ -14,6 +15,16 @@ import { SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
 import Desert from "@/components/desert-environment";
 
 const MODEL_URL = "/models/kasbah.glb";
+
+/**
+ * Live scroll state, written by the Lenis/native scroll loop and read by
+ * every useFrame inside the Canvas. Deliberately NOT React state: the
+ * camera, dimming, cutaway and sky update at frame rate without ever
+ * re-rendering the component tree (that re-render-per-scroll-event was
+ * the source of the old jank). React state only carries the quantized
+ * values the DOM text layer actually needs (chapter, universe, booleans).
+ */
+const tour = { progress: 0, fade: 0 };
 
 /**
  * Exterior scroll tour — 7 chapters, one page.
@@ -64,9 +75,15 @@ const STOPS: Waypoint[] = [
   { pos: [13.0, 6.2, 12.5], target: [3.8, 2.0, 0.2], chapter: 2 },
   { pos: [11.0, 8.4, 10.2], target: [4.1, 2.2, 0.1], chapter: 2 },
   { pos: [9.0, 10.4, 8.0], target: [4.4, 2.4, 0.1], chapter: 2 },
+  // ── Transition glide — the descent from the crown toward the orbit height.
+  //    Two extra stops (still chapter 3) ease y, radius AND the look-target
+  //    down gradually, so there is no jump entering the orbit.
+  { pos: [7.4, 8.0, 7.6], target: [4.0, 2.0, 0.0], chapter: 2 },
+  { pos: [5.4, 4.8, 7.4], target: [3.6, 1.5, 0.1], chapter: 2 },
   // ── Chapter 4 — Les quatre cultures: ONE continuous orbit, θ 100°→380°
   //    ellipse rx 9.5 / rz 8.5 around the model centre (4.55, ·, -1.45);
   //    20° steps keep the path on the arc. 4 text stops: θ 100/180/260/340.
+  { pos: [3.6, 3.2, 7.3], target: [3.4, 1.3, -0.5], chapter: 3 }, // glide-in, orbit height
   { pos: [2.90, 2.7, 6.92], target: [3.4, 1.3, -1.3], chapter: 3 },  // θ 100° S  — Amazigh
   { pos: [-0.20, 2.7, 5.91], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 120°
   { pos: [-2.73, 2.7, 4.01], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 140°
@@ -154,7 +171,7 @@ function smoothstep(x: number, a: number, b: number) {
  * dusk→night arc of the tour (the visit ends under the stars), matched
  * to the exposure fall so the DOM chapters arrive on a night scene.
  */
-function DesertNightSky({ progress }: { progress: number }) {
+function DesertNightSky() {
   const mat = useRef<ShaderMaterial>(null);
   const uniforms = useMemo(
     () => ({
@@ -171,7 +188,7 @@ function DesertNightSky({ progress }: { progress: number }) {
   useFrame((state) => {
     if (!mat.current) return;
     uniforms.uTime.value = state.clock.elapsedTime;
-    uniforms.uMood.value = smoothstep(progress, 0.55, 0.95);
+    uniforms.uMood.value = smoothstep(tour.progress, 0.55, 0.95);
   });
 
   return (
@@ -210,7 +227,7 @@ function DesertNightSky({ progress }: { progress: number }) {
  */
 const ROOF_CUT_MIN_Y = 2.55; // measured: everything above this is roofline
 
-function Model({ url, progress }: { url: string; progress: number }) {
+function Model({ url }: { url: string }) {
   const group = useRef<Group>(null);
   const { scene } = useGLTF(url);
   const centered = useRef(false);
@@ -229,6 +246,7 @@ function Model({ url, progress }: { url: string; progress: number }) {
     // cut clones via userData.cutRole and are simply re-registered.
     const seen = new Set<Material>();
     const register = (m: Material, role: "roof" | "wall" | null) => {
+      m.transparent = true; // opacity must actually apply (three ignores it on opaque materials)
       if (!seen.has(m)) {
         seen.add(m);
         mats.all.push(m);
@@ -283,12 +301,14 @@ function Model({ url, progress }: { url: string; progress: number }) {
   }, [scene, mats]);
 
   useFrame(() => {
-    // wake: 0 at the hero (model dimmed for the title) -> 1 once the tour starts
-    const wake = smoothstep(progress, 0, 0.06);
-    const night = smoothstep(progress, 0.55, 0.98);
-    const roofCut = smoothstep(progress, 0.8, 0.88);
-    const wallCut = smoothstep(progress, 0.86, 0.94);
-    const base = (1 - 0.82 * (1 - wake)) * (1 - 0.45 * night);
+    // wake: 0 at the very top of the page (model fully invisible under the
+    // hero title) -> 1 once the tour starts; night pulls it back down for
+    // the dollhouse beat.
+    const wake = smoothstep(tour.progress, 0, 0.06);
+    const night = smoothstep(tour.progress, 0.55, 0.98);
+    const roofCut = smoothstep(tour.progress, 0.8, 0.88);
+    const wallCut = smoothstep(tour.progress, 0.86, 0.94);
+    const base = wake * (1 - 0.45 * night);
     for (const m of mats.all) m.opacity = base;
     for (const m of mats.roof) m.opacity = base * (1 - roofCut);
     for (const m of mats.wall) m.opacity = base * (1 - wallCut);
@@ -302,30 +322,46 @@ function Model({ url, progress }: { url: string; progress: number }) {
 }
 
 /**
- * HeroDim — scene-side readability for the hero text. While the hero
- * overlay is up the AMBIENT falls (the model dim itself now lives in
- * Model's single opacity authority), so the text stays bare yet
- * high-contrast and the kasbah "wakes up" as the visitor enters the tour.
+ * SceneLights — every light in the tour scene, dimmed from the same live
+ * scroll curve: at the very top the model is invisible, so its interior
+ * fills and the ambient fall with it (no glow without a source); the sun
+ * directionals stay constant and ExposureRig handles the night exposure.
  */
-function HeroDim({ progress, children }: { progress: number; children: React.ReactNode }) {
-  // 1 = fully dimmed (hero), 0 = fully lit (tour). Smoothstep kills the seam.
-  const t = Math.min(1, progress / 0.06);
-  const dim = 1 - t * t * (3 - 2 * t);
+function SceneLights() {
+  const amb = useRef<AmbientLight>(null);
+  const fills = useRef<Array<PointLight | null>>([]);
+  const FILL = [14, 10, 10, 10, 7];
+
+  useFrame(() => {
+    const wake = smoothstep(tour.progress, 0, 0.06);
+    const night = smoothstep(tour.progress, 0.55, 0.98);
+    if (amb.current) amb.current.intensity = (0.18 + 0.72 * wake) * (1 - 0.3 * night);
+    fills.current.forEach((l, i) => {
+      if (l) l.intensity = FILL[i] * wake * (1 - 0.4 * night);
+    });
+  });
 
   return (
     <>
-      <group>{children}</group>
-      <ambientLight intensity={0.9 - 0.72 * dim} />
+      <ambientLight ref={amb} intensity={0.18} />
+      <directionalLight position={[30, 45, 60]} intensity={2.4} color="#fff4e0" />
+      <directionalLight position={[-40, 20, -30]} intensity={0.5} color="#a8c8e0" />
+      {/* interior fills keep windows/screens alive from outside (raw-space → shifted) */}
+      <pointLight ref={(l) => { fills.current[0] = l; }} position={shifted([4.4, 2.4, 0.1])} intensity={0} color="#ffd9a0" />
+      <pointLight ref={(l) => { fills.current[1] = l; }} position={shifted([2.2, 2.4, 0.6])} intensity={0} color="#ffd9a0" />
+      <pointLight ref={(l) => { fills.current[2] = l; }} position={shifted([6.3, 2.4, -3.5])} intensity={0} color="#ffd9a0" />
+      <pointLight ref={(l) => { fills.current[3] = l; }} position={shifted([4.4, 2.4, -3.4])} intensity={0} color="#ffd9a0" />
+      <pointLight ref={(l) => { fills.current[4] = l; }} position={shifted([2.2, 2.4, 1.1])} intensity={0} color="#ffd9a0" />
     </>
   );
 }
 
 /** Exposure follows the chapter arc: bright through the approach, warmer on
  *  the crown, falling into night across the orbit and the aerial park. */
-function ExposureRig({ progress }: { progress: number }) {
+function ExposureRig() {
   const { gl } = useThree();
   useFrame(() => {
-    const night = smoothstep(progress, 0.55, 0.98);
+    const night = smoothstep(tour.progress, 0.55, 0.98);
     gl.toneMappingExposure = 1.05 - 0.5 * night;
   });
   return null;
@@ -333,20 +369,15 @@ function ExposureRig({ progress }: { progress: number }) {
 
 /**
  * Desert dunes + rocks live in `desert-environment.tsx` (shared with the
- * /concept page); here we only feed it the tour's mood curve.
+ * /concept page); the tour hands it the live progress ref so the ground
+ * dims at frame rate alongside the model.
  */
-function DesertEnvironment({ progress }: { progress: number }) {
-  const wake = smoothstep(progress, 0, 0.06);
-  const night = smoothstep(progress, 0.55, 0.98);
-  const dim = (1 - 0.82 * (1 - wake)) * (1 - 0.45 * night);
-  return <Desert dim={dim} />;
-}
 
-function ScrollCamera({ progress }: { progress: number }) {
-  const { camera, size } = useThree();
+function ScrollCamera() {
+  const { camera, size, scene } = useThree();
 
   useFrame(() => {
-    const { pos, target } = segmentAt(progress);
+    const { pos, target } = segmentAt(tour.progress);
     // Narrow viewports see a much smaller horizontal slice of the same
     // vertical FOV, so the camera dollies out from its look-target. The
     // scaled path is re-validated against the GLB triangles for the
@@ -359,7 +390,8 @@ function ScrollCamera({ progress }: { progress: number }) {
     camera.lookAt(t[0], t[1], t[2]);
     // debug hook for automated camera verification (harmless in prod)
     (window as unknown as { __tourCam?: unknown }).__tourCam = camera;
-    (window as unknown as { __tourDebug?: unknown }).__tourDebug = { progress, seg: segmentAt(progress) };
+    (window as unknown as { __tourScene?: unknown }).__tourScene = scene;
+    (window as unknown as { __tourDebug?: unknown }).__tourDebug = { progress: tour.progress, seg: segmentAt(tour.progress) };
   });
 
   return null;
@@ -398,22 +430,20 @@ const UNIVERSE_IMGS = ["/img/amazigh.jpg", "/img/fassi.jpg", "/img/sahraoui.jpg"
 function ChapterText({
   dict,
   chapter,
-  chapterT,
-  progress,
+  universe,
+  visible,
   conceptPath,
 }: {
   dict: Dictionary;
   chapter: number;
-  chapterT: number;
-  progress: number;
+  universe: number;
+  visible: boolean;
   conceptPath: string;
 }) {
   const reduce = useReducedMotion();
-  const visible = progress > 0.025 && progress < 0.985 && chapter < 4;
   const side = CHAPTER_TEXT_SIDES[Math.min(3, chapter)];
   const chapterDicts = [dict.tour.ch1, dict.tour.ch2, dict.tour.ch3];
   const isOrbit = chapter === 3;
-  const universe = Math.min(3, Math.floor(chapterT * 4));
   const ch4 = dict.tour.ch4;
 
   const motionPreset = reduce
@@ -493,20 +523,21 @@ function ChapterText({
   );
 }
 
-/** Progress rail: 7 markers — 4 journey chapters, 3 DOM chapters. */
+/** Progress rail: 7 markers — 4 journey chapters, 3 DOM chapters. The
+ *  handoff fade is written straight to `fadeRef` by the scroll loop. */
 function ProgressRail({
   active,
-  fade,
+  fadeRef,
   hint,
   heroUp,
 }: {
   active: number; // 0-6
-  fade: number; // handoff: rail dies with the canvas
+  fadeRef: React.RefObject<HTMLDivElement | null>;
   hint: string;
   heroUp: boolean; // at the hero the md+ rail yields to the hero CTA (mobile keeps it, it owns the top)
 }) {
   return (
-    <div className="pointer-events-none absolute inset-0" style={{ opacity: Math.max(0, 1 - fade) }}>
+    <div ref={fadeRef} className="pointer-events-none absolute inset-0">
       <div
         className={`absolute top-20 left-1/2 -translate-x-1/2 md:top-auto md:bottom-8 flex flex-col items-center gap-3 transition-opacity duration-500 ${
           heroUp ? "max-md:opacity-100 md:opacity-0" : "opacity-100"
@@ -546,15 +577,18 @@ export default function KasbahTour({
   children: React.ReactNode; // DOM chapters 5-7, scrolled over the faded scene
 }) {
   const [webglOk, setWebglOk] = useState(true);
-  const [progress, setProgress] = useState(0);
-  const [fade, setFade] = useState(0);
-  const [domChapter, setDomChapter] = useState(0); // 0-2 → rail slots 4-6
+  // Quantized UI state — only changes at chapter/visibility boundaries, so
+  // scrolling re-renders the DOM layer a handful of times per chapter, not
+  // on every frame. Everything frame-rate lives in `tour`.
+  const [ui, setUi] = useState({ hero: true, textVisible: false, chapter: 0, universe: 0, railActive: 0, faded: false });
   const sectionRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
   const chaptersRef = useRef<HTMLDivElement>(null);
+  const railFadeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onScroll = () => {
+    const update = () => {
       const sp = spacerRef.current;
       const ch = chaptersRef.current;
       if (!sp || !ch) return;
@@ -564,77 +598,91 @@ export default function KasbahTour({
       // slot). The journey runs from scrollY=0 until the spacer bottom
       // reaches the viewport bottom, i.e. scrollY = docTop + height - vh.
       const finish = rect.top + window.scrollY + rect.height - vh;
-      if (finish > 0) {
-        setProgress(Math.min(1, Math.max(0, window.scrollY / finish)));
-      }
+      tour.progress = finish > 0 ? Math.min(1, Math.max(0, window.scrollY / finish)) : 0;
       // Handoff: as the DOM chapters rise from the viewport edge the canvas
-      // fades into the site background. Both directions stay smooth because
-      // the value is derived purely from scroll position.
+      // fades into the site background — a pure function of scroll position.
       const chTop = ch.getBoundingClientRect().top;
       const f = Math.min(1, Math.max(0, 1 - chTop / vh));
-      setFade(f * f * (3 - 2 * f));
-      // Which DOM chapter owns the viewport centre (for the rail)
+      tour.fade = f * f * (3 - 2 * f);
+      // Frame-rate values go straight to the DOM, bypassing React.
+      if (stickyRef.current) {
+        stickyRef.current.style.opacity = String(1 - tour.fade);
+        stickyRef.current.style.visibility = tour.fade > 0.995 ? "hidden" : "visible";
+      }
+      if (railFadeRef.current) railFadeRef.current.style.opacity = String(Math.max(0, 1 - tour.fade));
+      // Quantized state for the text layer — setUi bails on no-change.
+      const { chapter, chapterT } = segmentAt(tour.progress);
+      const universe = Math.min(3, Math.floor(chapterT * 4));
+      const textVisible = tour.progress > 0.025 && tour.progress < 0.985 && chapter < 4;
       const sections = ch.querySelectorAll("[data-chapter-dom]");
       let found = 0;
       sections.forEach((el, i) => {
-        const r = el.getBoundingClientRect();
-        if (r.top <= vh / 2) found = i;
+        if (el.getBoundingClientRect().top <= vh / 2) found = i;
       });
-      setDomChapter(found);
+      const railActive = tour.fade > 0.5 ? 4 + found : Math.min(chapter, 3);
+      const faded = tour.fade > 0.995;
+      setUi((prev) =>
+        prev.hero === (tour.progress < 0.02) &&
+        prev.textVisible === textVisible &&
+        prev.chapter === chapter &&
+        prev.universe === universe &&
+        prev.railActive === railActive &&
+        prev.faded === faded
+          ? prev
+          : { hero: tour.progress < 0.02, textVisible, chapter, universe, railActive, faded },
+      );
     };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    update();
+    // Lenis smooth scrolling. prefers-reduced-motion keeps native scroll.
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let lenis: Lenis | null = null;
+    let raf = 0;
+    if (!reduce) {
+      lenis = new Lenis({ lerp: 0.1 });
+      const loop = (time: number) => {
+        lenis?.raf(time);
+        update();
+        raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
+    } else {
+      window.addEventListener("scroll", update, { passive: true });
+    }
     // Initial measurement must run after the sticky layout settles
-    const t = setTimeout(onScroll, 100);
+    const t = setTimeout(update, 100);
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+      lenis?.destroy();
+      if (reduce) window.removeEventListener("scroll", update);
       clearTimeout(t);
     };
   }, []);
 
-  const { chapter, chapterT } = segmentAt(progress);
-  const railActive = fade > 0.5 ? 4 + domChapter : Math.min(chapter, 3);
-  const fullyFaded = fade > 0.995;
-
   return (
     <div ref={sectionRef} className="relative">
-      <div
-        className="sticky top-0 h-screen w-full overflow-hidden"
-        style={{ opacity: 1 - fade, visibility: fullyFaded ? "hidden" : "visible" }}
-      >
+      <div ref={stickyRef} className="sticky top-0 h-screen w-full overflow-hidden">
         {webglOk ? (
           <Canvas
             className="pointer-events-none"
             camera={{ position: shifted([6.0, 4.2, 16.0]), fov: 55, near: 0.1, far: 2000 }}
             dpr={[1, 2]}
-            frameloop={fullyFaded ? "never" : "always"}
+            frameloop={ui.faded ? "never" : "always"}
             gl={{ antialias: true, localClippingEnabled: false }}
             onCreated={({ gl }) => {
               if (!gl.getContext()) setWebglOk(false);
             }}
           >
-            <DesertNightSky progress={progress} />
-            <DesertEnvironment progress={progress} />
+            <DesertNightSky />
+            <Desert progressRef={tour} />
 
-            {/* HeroDim owns ambient while the hero is up (0.9 -> 0.18).
-                Directional + interior lights fade with the same curve. */}
-            <HeroDim progress={progress}>
-              <directionalLight position={[30, 45, 60]} intensity={2.4} color="#fff4e0" />
-              <directionalLight position={[-40, 20, -30]} intensity={0.5} color="#a8c8e0" />
-              {/* interior fills keep windows/screens alive from outside */}
-              <pointLight position={shifted([4.4, 2.4, 0.1])} intensity={14} color="#ffd9a0" />
-              <pointLight position={shifted([2.2, 2.4, 0.6])} intensity={10} color="#ffd9a0" />
-              <pointLight position={shifted([6.3, 2.4, -3.5])} intensity={10} color="#ffd9a0" />
-              <pointLight position={shifted([4.4, 2.4, -3.4])} intensity={10} color="#ffd9a0" />
-              <pointLight position={shifted([2.2, 2.4, 1.1])} intensity={7} color="#ffd9a0" />
+            <SceneLights />
 
-              <Suspense fallback={<LoaderFallback dict={dict} />}>
-                <Model url={MODEL_URL} progress={progress} />
-              </Suspense>
-            </HeroDim>
+            <Suspense fallback={<LoaderFallback dict={dict} />}>
+              <Model url={MODEL_URL} />
+            </Suspense>
 
-            <ExposureRig progress={progress} />
-            <ScrollCamera progress={progress} />
+            <ExposureRig />
+            <ScrollCamera />
           </Canvas>
         ) : (
           <WebGlFallback dict={dict} />
@@ -651,20 +699,20 @@ export default function KasbahTour({
 
         <ChapterText
           dict={dict}
-          chapter={chapter}
-          chapterT={chapterT}
-          progress={progress}
+          chapter={ui.chapter}
+          universe={ui.universe}
+          visible={ui.textVisible}
           conceptPath={conceptPath}
         />
 
-        <ProgressRail active={railActive} fade={fade} hint={dict.common.scrollHint} heroUp={progress < 0.02} />
+        <ProgressRail active={ui.railActive} fadeRef={railFadeRef} hint={dict.common.scrollHint} heroUp={ui.hero} />
 
         {/* Hero — only before the tour starts (chapter 1's opening beat).
-            Readability comes from the SCENE (HeroDim dims the model while
-            the hero is up), so the text stays completely bare. */}
+            Readability comes from the SCENE (the model and its lights are
+            invisible at the top), so the text stays completely bare. */}
         <div
           className={`transition-opacity duration-700 ${
-            progress < 0.02 ? "opacity-100" : "opacity-0 pointer-events-none"
+            ui.hero ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
           <div className="absolute top-[44%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-6 text-center">

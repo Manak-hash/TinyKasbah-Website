@@ -17,6 +17,19 @@
   --font-display: var(--font-marhey);
 }
 
+/* Lenis smooth scrolling: kill the native smooth behavior while active so
+   Lenis fully owns the scroll physics. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
 html {
   scroll-behavior: smooth;
 }
