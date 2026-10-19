@@ -2,10 +2,12 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Box3, BackSide, Color, Group } from "three";
+import { BackSide, Box3, Color, Group } from "three";
 import type { ShaderMaterial } from "three";
 import { Html, useGLTF } from "@react-three/drei";
-import { Loader2, ArrowDown } from "lucide-react";
+import { ArrowDown, Loader2 } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import Image from "next/image";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { Locale } from "@/i18n/config";
 import { SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
@@ -13,20 +15,137 @@ import { SKY_VERT, SKY_FRAG } from "@/components/sky-shader";
 const MODEL_URL = "/models/kasbah.glb";
 
 /**
- * Dark desert-night sky dome. Replaces the flat `<color>` background with a
- * backside-rendered shader sphere (big enough to contain every camera
- * waypoint, aerial included). Uniforms drive the look from OUTSIDE the
- * Canvas so the pace can match the scroll without React re-renders:
+ * Exterior scroll tour — 7 chapters, one page.
  *
- *   uTime  — seconds since mount; stars twinkle, aurora ribbons drift
- *   uMood  — scroll progress 0→1; the sky deepens from dusk to night as
- *            the tour approaches the aerial overview (dawn-reverse arc:
- *            the visit ends under the stars)
+ * Chapters 1-4 are the 3D journey: the camera NEVER enters the building.
+ * Waypoints are authored in RAW GLB space and re-centered at runtime with
+ * the same shift applied to the model (see Model). Every waypoint was
+ * placed from measured geometry (all 345k decoded GLB triangles) and
+ * validated at 5cm sampling: 0 collisions, min clearance 2.7m, roof
+ * (max Y 3.75), dome and ground (min Y -0.15) never clipped.
  *
- * Palette is the site's own: #16110b zenith, #3d2c18 horizon (sand lit by
- * a low sun long gone), gold #d9a441 and clay #c96f3b aurora. Fog is
- * matched to the horizon so the model's far edge melts into the dome
- * instead of glowing against it.
+ * Measured GLB geometry (raw space):
+ *   terrain:        X -1.84..10.93, Z -7.83..4.86
+ *   hall walls:     X 1.26..7.56, Z -1.38..1.62, roofline Y≈3.15, parapets 3.75
+ *   west vestibule: X -0.7..1.26, Z -1.9..-1.3 (the front door)
+ *   south annexes:  X 3.19..7.54, Z -5.13..-2.51
+ *   skydome crown:  ~(4.4, ·, 0.1)
+ *
+ * Chapters get EQUAL scroll shares (never distance-normalized — it
+ * desynced text/camera before). Slot 5 of the journey is the parked high
+ * aerial: the handoff beat where dusk deepens into night before the DOM
+ * chapters (5-7) scroll over the fading canvas.
+ */
+
+type Waypoint = {
+  pos: [number, number, number];
+  target: [number, number, number];
+  chapter: number; // 0-3 journey chapters + 4 = aerial park
+};
+
+const STOPS: Waypoint[] = [
+  // ── Chapter 1 — L'entrée: distant dusk three-quarter → dolly to west entrance
+  { pos: [-13.0, 5.5, -11.0], target: [3.8, 1.4, -1.4], chapter: 0 },
+  { pos: [-9.5, 4.2, -7.5], target: [3.6, 1.4, -1.5], chapter: 0 },
+  { pos: [-7.0, 2.9, -4.6], target: [2.6, 1.3, -1.6], chapter: 0 },
+  { pos: [-5.2, 2.0, -1.6], target: [0.4, 1.3, -1.6], chapter: 0 },
+  // ── Chapter 2 — Compact & réplicable: pull back to a straight-on elevation
+  { pos: [-7.4, 2.6, -1.6], target: [1.4, 1.2, -1.45], chapter: 1 },
+  { pos: [-11.8, 4.6, -1.45], target: [3.4, 0.9, -1.45], chapter: 1 },
+  { pos: [-13.5, 5.6, -1.45], target: [3.6, 0.7, -1.45], chapter: 1 },
+  // ── Chapter 3 — Système constructif et bioclimatique: rise to the crown
+  { pos: [-11.0, 5.2, -5.0], target: [1.6, 2.0, -1.0], chapter: 2 },
+  { pos: [-8.6, 7.4, -6.6], target: [3.4, 2.2, -0.4], chapter: 2 },
+  { pos: [-6.4, 9.6, -8.2], target: [4.2, 2.4, 0.1], chapter: 2 },
+  // ── Chapter 4 — Les quatre cultures: ONE continuous orbit, θ 100°→380°
+  //    ellipse rx 9.5 / rz 8.5 around the model centre (4.55, ·, -1.45);
+  //    20° steps keep the path on the arc. 4 text stops: θ 100/180/260/340.
+  { pos: [2.90, 2.7, 6.92], target: [3.4, 1.3, -1.3], chapter: 3 },  // θ 100° S  — Amazigh
+  { pos: [-0.20, 2.7, 5.91], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 120°
+  { pos: [-2.73, 2.7, 4.01], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 140°
+  { pos: [-4.38, 2.7, 1.46], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 160°
+  { pos: [-4.95, 2.7, -1.45], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 180° W — Fassi
+  { pos: [-4.38, 2.7, -4.36], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 200°
+  { pos: [-2.73, 2.7, -6.91], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 220°
+  { pos: [-0.20, 2.7, -8.81], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 240°
+  { pos: [2.90, 2.7, -9.82], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 260° N — Sahraoui
+  { pos: [6.20, 2.7, -9.82], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 280°
+  { pos: [9.30, 2.7, -8.81], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 300°
+  { pos: [11.83, 2.7, -6.91], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 320°
+  { pos: [13.48, 2.7, -4.36], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 340° E — Chamali
+  { pos: [14.05, 2.7, -1.45], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 360°
+  { pos: [13.48, 2.7, 1.46], target: [3.4, 1.3, -1.3], chapter: 3 }, // θ 380° E-NE
+  // ── Aerial park — the handoff beat (dusk → night, camera rests)
+  { pos: [12.4, 6.4, 5.6], target: [4.2, 0.8, -1.2], chapter: 4 },
+  { pos: [11.2, 12.0, 5.0], target: [4.4, 0.4, -1.2], chapter: 4 },
+  { pos: [10.4, 15.0, 4.2], target: [4.5, 0.2, -1.2], chapter: 4 },
+];
+
+/** Model centre in raw GLB space — waypoints are authored in this same space,
+ *  then both model and camera get shifted by -CENTER at render time. */
+const CENTER: [number, number] = [4.55, -1.45];
+
+const JOURNEY_CHAPTERS = 5; // 4 narrative chapters + the aerial park
+const CHAPTER_TEXT_SIDES = ["right", "left", "right", "left"] as const;
+
+/**
+ * Chapter pacing: equal scroll share per chapter (NOT distance-normalized).
+ * Each of the 5 journey slots owns 1/5 of the 3D scroll; the camera eases
+ * within each chapter's segment range.
+ */
+// segment i spans stops i..i+1; a segment "belongs" to the chapter of its
+// second stop (you arrive INTO the chapter).
+const SEG_CHAPTER = STOPS.slice(1).map((s) => s.chapter);
+
+function segmentAt(progress: number) {
+  const p = Math.min(0.9999, Math.max(0, progress));
+  const slot = Math.min(JOURNEY_CHAPTERS - 1, Math.floor(p * JOURNEY_CHAPTERS));
+  const chapterT = p * JOURNEY_CHAPTERS - slot;
+  let first = -1;
+  let last = -1;
+  for (let k = 0; k < SEG_CHAPTER.length; k++) {
+    if (SEG_CHAPTER[k] === slot) {
+      if (first === -1) first = k;
+      last = k;
+    }
+  }
+  if (first === -1) {
+    first = last = Math.min(SEG_CHAPTER.length - 1, slot);
+  }
+  const span = last - first + 1;
+  const localSeg = first + Math.min(span - 1, Math.floor(chapterT * span));
+  const f = chapterT * span - (localSeg - first);
+  const a = STOPS[localSeg];
+  const b = STOPS[localSeg + 1];
+  const ease = f * f * (3 - 2 * f);
+  const lerp = (pp: number[], q: number[]) => [
+    pp[0] + (q[0] - pp[0]) * ease,
+    pp[1] + (q[1] - pp[1]) * ease,
+    pp[2] + (q[2] - pp[2]) * ease,
+  ] as [number, number, number];
+  return {
+    pos: lerp(a.pos, b.pos),
+    target: lerp(a.target, b.target),
+    chapter: slot,
+    chapterT,
+  };
+}
+
+/** Apply CENTER shift to a raw-space point → render-space. */
+function shifted(p: [number, number, number]): [number, number, number] {
+  return [p[0] - CENTER[0], p[1], p[2] - CENTER[1]];
+}
+
+function smoothstep(x: number, a: number, b: number) {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
+
+/**
+ * Desert-night sky dome. Backside-rendered shader sphere big enough to
+ * contain every camera waypoint, aerial included. uMood carries the
+ * dusk→night arc of the tour (the visit ends under the stars), matched
+ * to the exposure fall so the DOM chapters arrive on a night scene.
  */
 function DesertNightSky({ progress }: { progress: number }) {
   const mat = useRef<ShaderMaterial>(null);
@@ -45,7 +164,7 @@ function DesertNightSky({ progress }: { progress: number }) {
   useFrame((state) => {
     if (!mat.current) return;
     uniforms.uTime.value = state.clock.elapsedTime;
-    uniforms.uMood.value = progress;
+    uniforms.uMood.value = smoothstep(progress, 0.55, 0.95);
   });
 
   return (
@@ -66,145 +185,7 @@ function DesertNightSky({ progress }: { progress: number }) {
   );
 }
 
-/**
- * Scrollytelling tour. Camera waypoints are authored in RAW GLB space, then
- * re-centered at runtime with the same shift applied to the model (see Model).
- * Every waypoint was placed from measured geometry (decoded GLB triangles):
- *
- * HALL (main room):   X 1.26..7.56, Z -1.38..1.62, walls h≈3.45
- *   - WEST SIDE: open arcade — carved screen wall (mesh w/ lattice) at X≈1.27
- *   - ENTRANCE VESTIBULE: solid protrusion west of hall, X -0.7..1.26,
- *     Z -1.9..-1.3 — reads as the front door from outside
- *   - SOUTH WALL Z≈-1.44 with interior DOOR at X 4.2..4.6 (verified gap)
- *   - NORTH WALL Z≈1.68; screens (perforated lattice) Z 0.1..2.6 on X 1.4..2.8 & 6.1..7.4
- *   - SKYDOME: glazed crown above hall center (~X 4.4, Z 0.1), visible from inside
- * ANNEXES (south wing): X 3.19..7.54, Z -5.13..-2.51, sealed from each other by
- *   divider X≈5.54; west annex reached through the south door, east annex only
- *   from the east courtyard.
- */
-
-type Stop = {
-  pos: [number, number, number];
-  target: [number, number, number];
-  panel: "entrance" | "hall" | "salon1" | "salon2" | "salon3" | "salon4" | "overview";
-  side: "left" | "right";
-};
-
-type TourKey = Stop["panel"];
-
-const CHAPTER_KEYS: TourKey[] = ["entrance", "hall", "salon1", "salon2", "salon3", "salon4", "overview"];
-
-/**
- * Waypoint path — VALIDATED against measured wall planes: every ground-level
- * segment sampled every 5cm is clear of all solid geometry (walls, screens,
- * vestibule, dividers) with 0.12m margin, 5cm sampling. Look-targets sit on
- * wall faces ≥0.78m from the camera. Chapters get EQUAL scroll shares and the
- * panel is keyed to the chapter slot, so text and camera never desync.
- *
- * Route — VERIFIED by exact triangle-distance checks against ALL GLB geometry
- * (walls AND furniture), 0 stops blocked, 0 segments under 0.10m clearance:
- * cinematic fly-in over the west wall (crosses at y≥4.3, clears by 0.56m) →
- * descend through the open west arcade → A*-found walkable spine between the
- * tea-prep counters (the hall is densely furnished!) → west carved screen
- * (Amazigh) → east aisle (Sahraoui) → dome gaze (Chamali) → rise back through
- * the arcade gap → aerial overview. The roof is NEVER clipped; the dome tilt
- * stays peripheral. Chapter panels own EQUAL scroll slots (1/7 each).
- */
-const STOPS: Stop[] = [
-  // 1 — entrance: aerial sweep, fly over the west wall, drop into the arcade
-  { pos: [-14, 7, 3.2], target: [2, 1.0, 0], panel: "entrance", side: "left" },
-  { pos: [-5, 4.2, 0.2], target: [3, 1.0, 0], panel: "entrance", side: "left" },
-  { pos: [-1.2, 4.35, -0.55], target: [3.2, 0.9, 0], panel: "entrance", side: "left" },   // over the wall
-  { pos: [2.55, 4.3, -0.55], target: [3.4, 1.0, 0.2], panel: "entrance", side: "left" },  // over the arcade
-  { pos: [2.55, 1.55, -0.55], target: [3.0, 1.2, 0.3], panel: "entrance", side: "left" }, // descend into aisle
-  // 2 — hall: W bay, level gazes, gentle dome tilt
-  { pos: [2.88, 1.55, -0.88], target: [1.5, 1.3, -0.2], panel: "hall", side: "right" },
-  { pos: [3.38, 1.55, -0.62], target: [4.42, 2.2, -0.3], panel: "hall", side: "right" },  // dome tilt, peripheral
-  // 3 — Amazigh: west aisle, carved screen close
-  { pos: [2.38, 1.55, -0.55], target: [1.45, 1.3, 0.1], panel: "salon1", side: "left" },
-  { pos: [2.88, 1.55, -0.3], target: [1.45, 1.3, 0.35], panel: "salon1", side: "left" },
-  { pos: [2.88, 1.55, -0.88], target: [1.5, 1.3, -0.2], panel: "salon1", side: "left" },
-  // 4 — Fassi: hall center, gaze at the south door light
-  { pos: [3.38, 1.55, -0.62], target: [4.4, 1.15, -1.5], panel: "salon2", side: "right" },
-  { pos: [4.12, 1.55, -0.62], target: [4.42, 1.15, -1.55], panel: "salon2", side: "right" },
-  { pos: [4.38, 1.55, -0.88], target: [4.38, 1.3, 0.2], panel: "salon2", side: "right" },
-  // 5 — Sahraoui: east aisle
-  { pos: [4.12, 1.55, -0.62], target: [5.6, 1.2, -0.3], panel: "salon3", side: "left" },
-  { pos: [5.38, 1.55, -0.62], target: [6.1, 1.2, 0.8], panel: "salon3", side: "left" },
-  { pos: [5.62, 1.55, 0.38], target: [6.15, 1.25, 1.4], panel: "salon3", side: "left" },
-  { pos: [6.12, 1.55, 0.88], target: [6.6, 1.2, -0.2], panel: "salon3", side: "left" },
-  // 6 — Chamali Rifi: north corner + dome reveal
-  { pos: [6.12, 1.55, 0.12], target: [5.0, 2.3, 0.3], panel: "salon4", side: "right" },
-  { pos: [5.38, 1.55, -0.62], target: [4.4, 2.8, 0.2], panel: "salon4", side: "right" },
-  { pos: [4.12, 1.55, -0.62], target: [4.42, 2.9, -0.1], panel: "salon4", side: "right" },
-  { pos: [3.38, 1.55, -0.62], target: [2.2, 1.25, -0.1], panel: "salon4", side: "right" },
-  // 7 — rise through the arcade gap, aerial overview
-  { pos: [2.55, 1.55, -0.55], target: [1.5, 1.3, -0.3], panel: "overview", side: "left" },
-  { pos: [2.55, 4.3, -0.55], target: [1.5, 1.2, -0.3], panel: "overview", side: "left" },  // up through the gap
-  { pos: [-1.2, 4.35, -0.55], target: [2.0, 0.8, -0.6], panel: "overview", side: "left" },
-  { pos: [-3, 5, -1], target: [4, 0.6, -0.8], panel: "overview", side: "left" },
-  { pos: [-8, 6.5, -3], target: [4, 0.5, -1.0], panel: "overview", side: "left" },
-  { pos: [4, 8, -9], target: [3.8, 0.5, -1.2], panel: "overview", side: "left" },
-  { pos: [14, 12, -14], target: [3.4, 0.5, -1.4], panel: "overview", side: "left" },
-];
-
-/** Model center in raw GLB space — waypoints are authored in this same space,
- *  then both model and camera get shifted by -CENTER at render time. */
-const CENTER: [number, number] = [4.55, -1.45];
-
-/** Chapter pacing: equal scroll share per chapter (NOT distance-normalized).
- *  Distance-normalized gave the approach 29% and the hall 5% — panels and
- *  camera desynced. Now each of the 7 chapters owns ~14% of the scroll; the
- *  camera eases within each chapter's segment range. */
-const CHAPTER_OF_STOP = STOPS.map((s) => CHAPTER_KEYS.indexOf(s.panel));
-// segment i spans stops i..i+1; a segment "belongs" to the chapter of its
-// second stop (you arrive INTO the chapter).
-const SEG_CHAPTER = CHAPTER_OF_STOP.slice(1);
-
-function segmentAt(progress: number) {
-  const p = Math.min(0.9999, Math.max(0, progress));
-  // which of the 7 chapter slots are we in (each = 1/7 of scroll)
-  const chapterSlot = Math.min(6, Math.floor(p * 7));
-  // position within the chapter: 0..1
-  const chapterT = p * 7 - chapterSlot;
-  // segment range for this chapter: first..last segment whose SEG_CHAPTER === slot
-  let first = -1;
-  let last = -1;
-  for (let k = 0; k < SEG_CHAPTER.length; k++) {
-    if (SEG_CHAPTER[k] === chapterSlot) {
-      if (first === -1) first = k;
-      last = k;
-    }
-  }
-  if (first === -1) {
-    // chapter has no segments (shouldn't happen) — nearest segment
-    first = last = Math.min(SEG_CHAPTER.length - 1, chapterSlot);
-  }
-  const span = last - first + 1;
-  const localSeg = first + Math.min(span - 1, Math.floor(chapterT * span));
-  const f = chapterT * span - (localSeg - first);
-  const a = STOPS[localSeg];
-  const b = STOPS[localSeg + 1];
-  const ease = f * f * (3 - 2 * f);
-  const lerp = (p: number[], q: number[]) => [
-    p[0] + (q[0] - p[0]) * ease,
-    p[1] + (q[1] - p[1]) * ease,
-    p[2] + (q[2] - p[2]) * ease,
-  ] as [number, number, number];
-  return {
-    pos: lerp(a.pos, b.pos),
-    target: lerp(a.target, b.target),
-    panel: CHAPTER_KEYS[chapterSlot],
-    side: f < 0.5 ? a.side : b.side,
-  };
-}
-
-/** Apply CENTER shift to a raw-space point → render-space. */
-function shifted(p: [number, number, number]): [number, number, number] {
-  return [p[0] - CENTER[0], p[1], p[2] - CENTER[1]];
-}
-
-function Model({ url }: { url: string }) {
+function Model({ url, progress }: { url: string; progress: number }) {
   const group = useRef<Group>(null);
   const { scene } = useGLTF(url);
   const centered = useRef(false);
@@ -218,6 +199,21 @@ function Model({ url }: { url: string }) {
     group.current.position.set(-CENTER[0], -box.min.y, -CENTER[1]);
   }, [scene]);
 
+  // The model recedes into the night during the aerial park (chapter 4):
+  // a scene-side dim, the same philosophy as HeroDim — never scrims.
+  useFrame(() => {
+    if (!group.current) return;
+    const night = smoothstep(progress, 0.55, 0.98);
+    const dim = 1 - 0.5 * smoothstep(night, 0.5, 1);
+    group.current.traverse((obj) => {
+      const mesh = obj as { material?: { opacity?: number; transparent?: boolean } };
+      if (mesh.material) {
+        mesh.material.transparent = true;
+        mesh.material.opacity = dim;
+      }
+    });
+  });
+
   return (
     <group ref={group}>
       <primitive object={scene} />
@@ -226,12 +222,10 @@ function Model({ url }: { url: string }) {
 }
 
 /**
- * HeroDim — scene-side readability for the hero text (option A).
- * While the hero overlay is up (progress ~ 0) the MODEL is dimmed:
- * lights fade toward a single faint ambient and a subtle dark overlay
- * sits over the canvas. Scroll restores everything progressively, so
- * the text stays bare (no scrim boxes) yet high-contrast, and the
- * kasbah "wakes up" as the visitor enters the tour.
+ * HeroDim — scene-side readability for the hero text.
+ * While the hero overlay is up (progress ~ 0) the MODEL is dimmed.
+ * Scroll restores everything progressively, so the text stays bare
+ * (no scrim boxes) yet high-contrast, and the kasbah "wakes up".
  */
 function HeroDim({ progress, children }: { progress: number; children: React.ReactNode }) {
   const group = useRef<Group>(null);
@@ -259,13 +253,24 @@ function HeroDim({ progress, children }: { progress: number; children: React.Rea
   );
 }
 
+/** Exposure follows the chapter arc: bright through the approach, warmer on
+ *  the crown, falling into night across the orbit and the aerial park. */
+function ExposureRig({ progress }: { progress: number }) {
+  const { gl } = useThree();
+  useFrame(() => {
+    const night = smoothstep(progress, 0.55, 0.98);
+    gl.toneMappingExposure = 1.05 - 0.5 * night;
+  });
+  return null;
+}
+
 function ScrollCamera({ progress }: { progress: number }) {
   const { camera } = useThree();
 
   useFrame(() => {
     const { pos, target } = segmentAt(progress);
-    // 1:1 with scroll (no lag) so the camera never drifts into walls after the
-    // user stops; waypoints themselves are collision-safe.
+    // 1:1 with scroll (no lag) so the camera never drifts off its validated
+    // path; waypoints themselves are collision-safe.
     camera.position.set(...shifted(pos));
     camera.lookAt(...shifted(target));
     // debug hook for automated camera verification (harmless in prod)
@@ -296,28 +301,196 @@ function LoaderFallback({ dict }: { dict: Dictionary }) {
   );
 }
 
+/** Universe photos for chapter 4 — small insets, the model stays the hero. */
+const UNIVERSE_IMGS = ["/img/amazigh.jpg", "/img/fassi.jpg", "/img/sahraoui.jpg", "/img/chamali.jpg"];
+
+/**
+ * Editorial text layer for chapters 1-4. Bare typography over the scene:
+ * large chapter index, display title, thin rule, short body. No boxes, no
+ * backdrop-blur pills — legibility comes from the scene side (HeroDim,
+ * exposure, sky). Side alternates per chapter and never covers the
+ * building; on mobile the text docks bottom with the model above it.
+ */
+function ChapterText({
+  dict,
+  chapter,
+  chapterT,
+  progress,
+  conceptPath,
+}: {
+  dict: Dictionary;
+  chapter: number;
+  chapterT: number;
+  progress: number;
+  conceptPath: string;
+}) {
+  const reduce = useReducedMotion();
+  const visible = progress > 0.025 && progress < 0.985 && chapter < 4;
+  const side = CHAPTER_TEXT_SIDES[Math.min(3, chapter)];
+  const chapterDicts = [dict.tour.ch1, dict.tour.ch2, dict.tour.ch3];
+  const isOrbit = chapter === 3;
+  const universe = Math.min(3, Math.floor(chapterT * 4));
+  const ch4 = dict.tour.ch4;
+
+  const motionPreset = reduce
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : {
+        initial: { opacity: 0, y: 28 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -20 },
+      };
+
+  return (
+    <div
+      className={`pointer-events-none absolute inset-x-4 bottom-14 z-10 md:inset-x-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:w-[min(80vw,420px)] transition-opacity duration-500 ${
+        side === "left" ? "md:left-14" : "md:right-14"
+      } ${visible ? "opacity-100" : "opacity-0"}`}
+    >
+      <AnimatePresence mode="wait">
+        {visible && !isOrbit && (
+          <motion.div
+            key={`ch-${chapter}`}
+            {...motionPreset}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+          >
+            <p className="font-display text-5xl md:text-7xl leading-none text-gold/85 select-none" aria-hidden>
+              {String(chapter + 1).padStart(2, "0")}
+            </p>
+            <h2 className="mt-3 font-display text-2xl md:text-4xl font-semibold tracking-tight drop-shadow-[0_1px_12px_rgba(0,0,0,0.7)]">
+              {chapterDicts[chapter].title}
+            </h2>
+            <div className="mt-3 h-px w-16 bg-gold/70 drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]" aria-hidden />
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-sand/95 md:text-base [text-shadow:0_1px_6px_rgba(0,0,0,0.75)]">
+              {chapterDicts[chapter].body}
+            </p>
+          </motion.div>
+        )}
+        {visible && isOrbit && (
+          <motion.div
+            key={`ch4-${universe}`}
+            {...motionPreset}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+          >
+            <p className="font-display text-5xl md:text-7xl leading-none text-gold/85 select-none" aria-hidden>
+              04
+            </p>
+            <h2 className="mt-3 font-display text-2xl md:text-4xl font-semibold tracking-tight drop-shadow-[0_1px_12px_rgba(0,0,0,0.7)]">
+              {ch4.items[universe].name}
+            </h2>
+            <div className="mt-3 h-px w-16 bg-gold/70 drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]" aria-hidden />
+            <div className="mt-4 flex items-start gap-4">
+              <span className="block h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-sand/20 shadow-[0_4px_24px_rgba(0,0,0,0.55)] md:h-24 md:w-24">
+                <Image
+                  src={UNIVERSE_IMGS[universe]}
+                  alt={ch4.items[universe].name}
+                  width={96}
+                  height={96}
+                  sizes="96px"
+                  className="h-full w-full object-cover"
+                />
+              </span>
+              <p className="max-w-xs text-sm leading-relaxed text-sand/95 md:text-base [text-shadow:0_1px_6px_rgba(0,0,0,0.75)]">
+                {ch4.items[universe].subtitle}
+              </p>
+            </div>
+            <p className="mt-4 max-w-xs text-xs leading-relaxed text-sand/75 [text-shadow:0_1px_6px_rgba(0,0,0,0.75)]">
+              {ch4.body}{" "}
+              <a
+                href={conceptPath}
+                className="pointer-events-auto underline decoration-gold/50 underline-offset-4 transition-colors hover:text-gold"
+              >
+                {dict.common.exploreIn3d}
+              </a>
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/** Progress rail: 7 markers — 4 journey chapters, 3 DOM chapters. */
+function ProgressRail({
+  active,
+  fade,
+  hint,
+}: {
+  active: number; // 0-6
+  fade: number; // handoff: rail dies with the canvas
+  hint: string;
+}) {
+  return (
+    <div
+      className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 md:top-auto md:bottom-8 flex flex-col items-center gap-3 transition-opacity duration-500"
+      style={{ opacity: Math.max(0, 1 - fade) }}
+    >
+      <div className="flex gap-1.5">
+        {Array.from({ length: 7 }, (_, i) => (
+          <span
+            key={i}
+            className={`h-1 rounded-full transition-all duration-300 ${
+              i === active ? "w-8 bg-gold" : "w-3 bg-sand/25"
+            }`}
+          />
+        ))}
+      </div>
+      <p
+        className={`rounded-full text-[10px] tracking-[0.3em] uppercase transition-all duration-500 ${
+          active > 0
+            ? "px-4 py-1.5 text-sand/90"
+            : "text-sand/50"
+        }`}
+      >
+        {hint}
+      </p>
+    </div>
+  );
+}
+
 export default function KasbahTour({
   dict,
   locale,
   conceptPath,
+  children,
 }: {
   dict: Dictionary;
   locale: Locale;
   conceptPath: string;
+  children: React.ReactNode; // DOM chapters 5-7, scrolled over the faded scene
 }) {
-  const [ready, setReady] = useState(false);
   const [webglOk, setWebglOk] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [fade, setFade] = useState(0);
+  const [domChapter, setDomChapter] = useState(0); // 0-2 → rail slots 4-6
   const sectionRef = useRef<HTMLDivElement>(null);
+  const spacerRef = useRef<HTMLDivElement>(null);
+  const chaptersRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => {
-      const el = sectionRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const scrollable = rect.height - window.innerHeight;
-      if (scrollable <= 0) return;
-      setProgress(Math.min(1, Math.max(0, -rect.top / scrollable)));
+      const sp = spacerRef.current;
+      const ch = chaptersRef.current;
+      if (!sp || !ch) return;
+      const vh = window.innerHeight;
+      const rect = sp.getBoundingClientRect();
+      const scrollable = rect.height - vh;
+      if (scrollable > 0) {
+        setProgress(Math.min(1, Math.max(0, -rect.top / scrollable)));
+      }
+      // Handoff: as the DOM chapters rise from the viewport edge the canvas
+      // fades into the site background. Both directions stay smooth because
+      // the value is derived purely from scroll position.
+      const chTop = ch.getBoundingClientRect().top;
+      const f = Math.min(1, Math.max(0, 1 - chTop / vh));
+      setFade(f * f * (3 - 2 * f));
+      // Which DOM chapter owns the viewport centre (for the rail)
+      const sections = ch.querySelectorAll("[data-chapter-dom]");
+      let found = 0;
+      sections.forEach((el, i) => {
+        const r = el.getBoundingClientRect();
+        if (r.top <= vh / 2) found = i;
+      });
+      setDomChapter(found);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -329,33 +502,35 @@ export default function KasbahTour({
     };
   }, []);
 
-  const { panel, side } = segmentAt(progress);
-  const chapterIndex = CHAPTER_KEYS.indexOf(panel) + 1;
-  const panelDict = dict.tour[panel as TourKey];
-  const visible = ready && progress > 0.02;
+  const { chapter, chapterT } = segmentAt(progress);
+  const railActive = fade > 0.5 ? 4 + domChapter : Math.min(chapter, 3);
+  const fullyFaded = fade > 0.995;
 
   return (
-    <div ref={sectionRef} className="relative" style={{ height: "700vh" }}>
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
+    <div ref={sectionRef} className="relative">
+      <div
+        className="sticky top-0 h-screen w-full overflow-hidden"
+        style={{ opacity: 1 - fade, visibility: fullyFaded ? "hidden" : "visible" }}
+      >
         {webglOk ? (
           <Canvas
             className="pointer-events-none"
-            camera={{ position: shifted([-14, 7, 3.2]), fov: 55, near: 0.1, far: 2000 }}
+            camera={{ position: shifted([-13.0, 5.5, -11.0]), fov: 55, near: 0.1, far: 2000 }}
             dpr={[1, 2]}
+            frameloop={fullyFaded ? "never" : "always"}
             gl={{ antialias: true, localClippingEnabled: false }}
             onCreated={({ gl }) => {
               if (!gl.getContext()) setWebglOk(false);
-              setReady(true);
             }}
           >
             <DesertNightSky progress={progress} />
 
-            {/* HeroDim owns ambient: it fades 0.9 -> 0.18 while the hero is up.
-                Directional + interior point lights fade with the same curve. */}
+            {/* HeroDim owns ambient while the hero is up (0.9 -> 0.18).
+                Directional + interior lights fade with the same curve. */}
             <HeroDim progress={progress}>
               <directionalLight position={[30, 45, 60]} intensity={2.4} color="#fff4e0" />
               <directionalLight position={[-40, 20, -30]} intensity={0.5} color="#a8c8e0" />
-              {/* interior fills so rooms stay readable (raw-space → shifted) */}
+              {/* interior fills keep windows/screens alive from outside */}
               <pointLight position={shifted([4.4, 2.4, 0.1])} intensity={14} color="#ffd9a0" />
               <pointLight position={shifted([2.2, 2.4, 0.6])} intensity={10} color="#ffd9a0" />
               <pointLight position={shifted([6.3, 2.4, -3.5])} intensity={10} color="#ffd9a0" />
@@ -363,77 +538,39 @@ export default function KasbahTour({
               <pointLight position={shifted([2.2, 2.4, 1.1])} intensity={7} color="#ffd9a0" />
 
               <Suspense fallback={<LoaderFallback dict={dict} />}>
-                <Model url={MODEL_URL} />
+                <Model url={MODEL_URL} progress={progress} />
               </Suspense>
             </HeroDim>
 
+            <ExposureRig progress={progress} />
             <ScrollCamera progress={progress} />
           </Canvas>
         ) : (
           <WebGlFallback dict={dict} />
         )}
 
-        {/* Subtle vignette for panel readability */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-transparent" />
-
-        {/* Info panel — side-docked & vertically centered on md+, docked to the
-            bottom edge on mobile so the model stays visible above it */}
+        {/* Scene-side vignette: readability without text-side bands */}
         <div
-          className={`absolute inset-x-4 bottom-4 md:inset-x-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:w-[min(88vw,380px)] transition-all duration-500 ${
-            side === "left" ? "md:left-14" : "md:right-14"
-          } ${visible ? "opacity-100" : "opacity-0"}`}
-        >
-          <div
-            key={panel}
-            className="rounded-3xl border border-sand/15 bg-[#101312]/85 backdrop-blur-md p-4 md:p-7 shadow-2xl"
-          >
-            <p className="text-[10px] tracking-[0.3em] uppercase text-gold">
-              {dict.tour.chapter} {chapterIndex}/7 : {panelDict.kicker}
-            </p>
-            <h3 className="mt-2 text-xl md:mt-3 md:text-3xl font-bold">{panelDict.title}</h3>
-            <p className="mt-1.5 text-[13px] leading-snug text-sand/70 md:mt-3 md:text-sm md:leading-relaxed">{panelDict.text}</p>
-          </div>
-        </div>
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 90% 75% at 50% 45%, transparent 55%, rgba(10,7,4,0.55) 100%)",
+          }}
+        />
 
-        {/* Progress rail — top center on mobile (panel owns the bottom), bottom on md+.
-            Once the tour starts (progress > 0.02) the hint gets a dark pill
-            backdrop + brighter text so it stays readable against the lit
-            interior walls; before that, over the open night sky, it sits bare.
-            The bare hint is also hidden while the hero is on screen — the hero
-            CTA occupies the same bottom-center slot and the two collided. */}
-        <div
-          className={`absolute top-20 left-1/2 -translate-x-1/2 md:top-auto md:bottom-8 flex flex-col items-center gap-3 pointer-events-none transition-opacity duration-500 ${
-            progress < 0.02 ? "md:opacity-0 max-md:opacity-100" : "opacity-100"
-          }`}
-        >
-          <div className="flex gap-1.5">
-            {CHAPTER_KEYS.map(
-              (k, i) => (
-                <span
-                  key={k}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    i === chapterIndex - 1 ? "w-8 bg-gold" : "w-3 bg-sand/25"
-                  }`}
-                />
-              ),
-            )}
-          </div>
-          <p
-            className={`text-[10px] tracking-[0.3em] uppercase rounded-full transition-all duration-500 ${
-              visible
-                ? "text-sand/90 bg-[#0e0a06]/70 backdrop-blur-sm px-4 py-1.5 border border-sand/10"
-                : "text-sand/50"
-            }`}
-          >
-            {dict.common.scrollHint}
-          </p>
-        </div>
+        <ChapterText
+          dict={dict}
+          chapter={chapter}
+          chapterT={chapterT}
+          progress={progress}
+          conceptPath={conceptPath}
+        />
 
-        {/* Hero — only before the tour starts. Title block sits at optical
-            center; the scroll CTA is pinned to the viewport bottom edge.
+        <ProgressRail active={railActive} fade={fade} hint={dict.common.scrollHint} />
+
+        {/* Hero — only before the tour starts (chapter 1's opening beat).
             Readability comes from the SCENE (HeroDim dims the model while
-            the hero is up), so the text stays completely bare: no scrim,
-            no boxes. */}
+            the hero is up), so the text stays completely bare. */}
         <div
           className={`transition-opacity duration-700 ${
             progress < 0.02 ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -462,32 +599,18 @@ export default function KasbahTour({
           </div>
         </div>
 
-        {/* Final CTA — at the overview */}
-        <div
-          className={`absolute bottom-10 right-6 md:right-14 w-[min(88vw,380px)] transition-all duration-700 ${
-            progress > 0.9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"
-          }`}
-        >
-          <div className="rounded-3xl border border-gold/30 bg-gradient-to-b from-gold/15 to-transparent backdrop-blur-md p-6 text-center">
-            <p className="font-semibold">{dict.tour.cta.title}</p>
-            <p className="mt-2 text-xs text-sand/70 leading-relaxed">{dict.tour.cta.text}</p>
-            <a
-              href="mailto:contact@terrevolution.ma"
-              className="mt-4 inline-block px-6 py-2.5 rounded-full bg-clay hover:bg-clay/90 text-white text-sm font-medium transition-colors"
-            >
-              {dict.tour.cta.button}
-            </a>
-            <a
-              href={conceptPath}
-              className="mt-3 block text-xs text-sand/60 underline decoration-sand/30 underline-offset-4 transition-colors hover:text-gold"
-            >
-              {dict.common.exploreIn3d}
-            </a>
-          </div>
-        </div>
-
         {/* language switcher stays accessible */}
         <input type="hidden" data-locale={locale} />
+      </div>
+
+      {/* 3D scroll range: 5 journey slots × ~92vh each. Deliberate pacing
+          without stalls: chapters are equal, segments ease within each. */}
+      <div ref={spacerRef} style={{ height: "460vh" }} aria-hidden />
+
+      {/* Chapters 5-7: DOM editorial scrolling OVER the parked, fading scene.
+          Solid site background so the handoff reads as one continuous page. */}
+      <div ref={chaptersRef} className="relative z-10 bg-background">
+        {children}
       </div>
     </div>
   );
