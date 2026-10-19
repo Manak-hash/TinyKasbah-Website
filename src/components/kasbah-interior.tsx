@@ -157,7 +157,7 @@ function SunLight({ time }: { time: number }) {
 
 /* ------------------------------ model ------------------------------ */
 
-function Model({ url }: { url: string }) {
+function Model({ url, clipPlane }: { url: string; clipPlane: Plane }) {
   const group = useRef<Group>(null);
   const { scene } = useGLTF(url);
   const centered = useRef(false);
@@ -174,14 +174,23 @@ function Model({ url }: { url: string }) {
     // (transparent + opacity 0.18) and three's module-level cache shares
     // them across pages. Navigating home -> /concept must restore full
     // opacity or the interior renders see-through until a hard refresh.
+    // The section-cut plane is bound per MATERIAL here — the shared
+    // desert environment must never be clipped by the model slider.
     scene.traverse((obj) => {
-      const mesh = obj as { material?: { opacity?: number; transparent?: boolean } };
-      if (mesh.material) {
-        mesh.material.opacity = 1;
-        mesh.material.transparent = false;
+      const mesh = obj as {
+        material?:
+          | { opacity?: number; transparent?: boolean; clippingPlanes?: Plane[] | null }
+          | Array<{ opacity?: number; transparent?: boolean; clippingPlanes?: Plane[] | null }>;
+      };
+      if (!mesh.material) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of mats) {
+        m.opacity = 1;
+        m.transparent = false;
+        m.clippingPlanes = [clipPlane];
       }
     });
-  }, [scene]);
+  }, [scene, clipPlane]);
 
   return (
     <group ref={group}>
@@ -190,20 +199,13 @@ function Model({ url }: { url: string }) {
   );
 }
 
-/** Global clipping plane along X — slider right slices deeper into the model. */
-function SectionCut({ cut }: { cut: number }) {
-  const gl = useThree((s) => s.gl);
-  const plane = useMemo(() => new Plane(new Vector3(-1, 0, 0), cut), [cut]);
-
+/** Section cut along X — slider right slices deeper into the model.
+ *  The plane is bound to the model's materials only (see Model); the
+ *  desert environment stays untouched. */
+function SectionCut({ cut, plane }: { cut: number; plane: Plane }) {
   useEffect(() => {
-    // three.js API is mutation-based (renderer state) — mutating the
-    // renderer's own clippingPlanes array slot is the documented pattern
-    // for global clipping planes. (Rule off for this file in
-    // eslint.config.mjs: the immutability rule can't model renderer state.)
-    gl.clippingPlanes[0] = plane;
-    gl.clippingPlanes.length = 1;
-  }, [gl, plane]);
-
+    plane.constant = cut;
+  }, [plane, cut]);
   return null;
 }
 
@@ -391,6 +393,11 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
   const seq = useRef(0);
 
   const cutValue = NO_CUT - (cut / 100) * (NO_CUT - FULL_CUT);
+  // one shared plane, bound to the model's materials (never the desert);
+  // its `constant` is mutated by <SectionCut>, so cutValue here is only
+  // the initial value.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const clipPlane = useMemo(() => new Plane(new Vector3(-1, 0, 0), cutValue), []);
 
   const flyTo = (pos: Vec3, target: Vec3, duration = 1400) => {
     setHintVisible(false);
@@ -473,7 +480,7 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
           <pointLight position={[1, 2.4, -4]} intensity={10 * fillScale(time)} color="#ffd9a0" />
 
           <Suspense fallback={<LoaderFallback dict={dict} />}>
-            <Model url={MODEL_URL} />
+            <Model url={MODEL_URL} clipPlane={clipPlane} />
           </Suspense>
 
           <MapControls
@@ -492,7 +499,7 @@ export default function KasbahInterior({ dict }: { dict: Dictionary }) {
             touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
           />
           <CameraRig viewReq={viewReq} zoomReq={zoomReq} rotateReq={rotateReq} joystickRef={joystickRef} />
-          <SectionCut cut={cutValue} />
+          <SectionCut cut={cutValue} plane={clipPlane} />
         </Canvas>
       ) : (
         <WebGlFallback dict={dict} />

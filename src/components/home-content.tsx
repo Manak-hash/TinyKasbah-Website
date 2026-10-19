@@ -31,7 +31,7 @@ export default function HomeContent({
       <KasbahTour dict={dict} locale={locale} conceptPath={conceptPath}>
         {/* ---------- Chapter 5 — Usages ---------- */}
         <section data-chapter-dom className="border-t border-sand/10">
-          <div className="max-w-6xl mx-auto px-5 sm:px-6 py-20 md:py-32 text-center">
+          <div className="max-w-6xl mx-auto px-5 sm:px-6 pt-14 pb-20 md:pt-24 md:pb-32 text-center">
             <p className="text-xs tracking-[0.3em] uppercase text-teal">{dict.usages.kicker}</p>
             <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold tracking-tight">
               {dict.usages.title}
@@ -55,7 +55,7 @@ export default function HomeContent({
 
         {/* ---------- Chapter 6 — Partenaires ---------- */}
         <section data-chapter-dom className="border-t border-sand/10">
-          <div className="max-w-6xl mx-auto px-5 sm:px-6 py-20 md:py-32 text-center">
+          <div className="max-w-6xl mx-auto px-5 sm:px-6 pt-14 pb-12 md:pt-24 md:pb-12 text-center">
             <p className="text-xs tracking-[0.3em] uppercase text-teal">{dict.partners.kicker}</p>
             <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold tracking-tight">
               {dict.partners.title}
@@ -64,7 +64,7 @@ export default function HomeContent({
             <p className="mt-6 font-semibold text-lg">{dict.partners.intro}</p>
             <p className="mt-4 mx-auto max-w-xl text-sand/75 leading-relaxed">{dict.partners.body}</p>
 
-            <div className="mt-12">
+            <div className="mt-10 md:mt-12 mb-10 md:mb-12">
               <PartnerCredits dict={dict} />
             </div>
           </div>
@@ -72,7 +72,7 @@ export default function HomeContent({
 
         {/* ---------- Chapter 7 — Contact (the old footer is folded in) ---------- */}
         <section data-chapter-dom className="border-t border-sand/10">
-          <div className="max-w-6xl mx-auto px-5 sm:px-6 pt-20 md:pt-32 pb-14 md:pb-16 text-center">
+          <div className="max-w-6xl mx-auto px-5 sm:px-6 pt-14 pb-14 md:pt-24 md:pb-16 text-center">
             <p className="text-xs tracking-[0.3em] uppercase text-teal">{dict.contact.kicker}</p>
             <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold tracking-tight">
               {dict.contact.title}
