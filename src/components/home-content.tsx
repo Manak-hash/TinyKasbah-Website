@@ -119,7 +119,8 @@ export default function HomeContent({
             </div>
 
             <div className="mt-16 border-t border-sand/10 pt-8">
-              <p className="text-xs text-sand/40">{dict.contact.followLaunch}</p>
+              <p className="text-xs text-sand/50">{dict.common.brandTagline}</p>
+              <p className="mt-3 text-xs text-sand/40">{dict.contact.followLaunch}</p>
               <p className="mt-3 text-xs text-sand/40">
                 <a
                   href={conceptPath}

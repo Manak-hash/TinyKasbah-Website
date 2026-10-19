@@ -265,14 +265,20 @@ function ExposureRig({ progress }: { progress: number }) {
 }
 
 function ScrollCamera({ progress }: { progress: number }) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
 
   useFrame(() => {
     const { pos, target } = segmentAt(progress);
-    // 1:1 with scroll (no lag) so the camera never drifts off its validated
-    // path; waypoints themselves are collision-safe.
-    camera.position.set(...shifted(pos));
-    camera.lookAt(...shifted(target));
+    // Narrow viewports see a much smaller horizontal slice of the same
+    // vertical FOV, so the camera dollies out from its look-target. The
+    // scaled path is re-validated against the GLB triangles for the
+    // 390x844 aspect (0.46 -> k≈1.49); desktop (aspect >= 1) is unchanged.
+    const aspect = size.width / Math.max(1, size.height);
+    const k = aspect >= 1 ? 1 : Math.min(1.7, 1 + (1 - aspect) * 0.9);
+    const p = shifted(pos);
+    const t = shifted(target);
+    camera.position.set(t[0] + (p[0] - t[0]) * k, t[1] + (p[1] - t[1]) * k, t[2] + (p[2] - t[2]) * k);
+    camera.lookAt(t[0], t[1], t[2]);
     // debug hook for automated camera verification (harmless in prod)
     (window as unknown as { __tourCam?: unknown }).__tourCam = camera;
     (window as unknown as { __tourDebug?: unknown }).__tourDebug = { progress, seg: segmentAt(progress) };
@@ -473,9 +479,12 @@ export default function KasbahTour({
       if (!sp || !ch) return;
       const vh = window.innerHeight;
       const rect = sp.getBoundingClientRect();
-      const scrollable = rect.height - vh;
-      if (scrollable > 0) {
-        setProgress(Math.min(1, Math.max(0, -rect.top / scrollable)));
+      // The spacer sits one viewport down in flow (after the sticky hero
+      // slot). The journey runs from scrollY=0 until the spacer bottom
+      // reaches the viewport bottom, i.e. scrollY = docTop + height - vh.
+      const finish = rect.top + window.scrollY + rect.height - vh;
+      if (finish > 0) {
+        setProgress(Math.min(1, Math.max(0, window.scrollY / finish)));
       }
       // Handoff: as the DOM chapters rise from the viewport edge the canvas
       // fades into the site background. Both directions stay smooth because

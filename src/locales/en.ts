@@ -108,8 +108,6 @@ const en = {
     followLaunch: "A Terrevolution concept. Follow the launch.",
   },
   footer: {
-    byline:
-      "A Terrevolution concept. Follow the launch.",
     copyright: "Terrevolution",
     bureauEtude: "Engineering",
     maitreOuvrage: "Client",

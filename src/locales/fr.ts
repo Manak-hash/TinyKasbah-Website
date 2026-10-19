@@ -110,8 +110,6 @@ const fr: Messages = {
     followLaunch: "Un concept Terrevolution. Suivez le lancement.",
   },
   footer: {
-    byline:
-      "Un concept Terrevolution. Suivez le lancement.",
     copyright: "Terrevolution",
     bureauEtude: "Ingénierie",
     maitreOuvrage: "Maître d'ouvrage",

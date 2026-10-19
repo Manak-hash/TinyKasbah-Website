@@ -110,8 +110,6 @@ const de: Messages = {
     followLaunch: "Ein Konzept von Terrevolution. Folgen Sie dem Start.",
   },
   footer: {
-    byline:
-      "Ein Konzept von Terrevolution. Folgen Sie dem Start.",
     copyright: "Terrevolution",
     bureauEtude: "Ingenieurwesen",
     maitreOuvrage: "Bauherr",
