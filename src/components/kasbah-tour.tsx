@@ -506,35 +506,38 @@ function ProgressRail({
   active,
   fade,
   hint,
+  heroUp,
 }: {
   active: number; // 0-6
   fade: number; // handoff: rail dies with the canvas
   hint: string;
+  heroUp: boolean; // at the hero the md+ rail yields to the hero CTA (mobile keeps it, it owns the top)
 }) {
   return (
-    <div
-      className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 md:top-auto md:bottom-8 flex flex-col items-center gap-3 transition-opacity duration-500"
-      style={{ opacity: Math.max(0, 1 - fade) }}
-    >
-      <div className="flex gap-1.5">
-        {Array.from({ length: 7 }, (_, i) => (
-          <span
-            key={i}
-            className={`h-1 rounded-full transition-all duration-300 ${
-              i === active ? "w-8 bg-gold" : "w-3 bg-sand/25"
-            }`}
-          />
-        ))}
-      </div>
-      <p
-        className={`rounded-full text-[10px] tracking-[0.3em] uppercase transition-all duration-500 ${
-          active > 0
-            ? "px-4 py-1.5 text-sand/90"
-            : "text-sand/50"
+    <div className="pointer-events-none absolute inset-0" style={{ opacity: Math.max(0, 1 - fade) }}>
+      <div
+        className={`absolute top-20 left-1/2 -translate-x-1/2 md:top-auto md:bottom-8 flex flex-col items-center gap-3 transition-opacity duration-500 ${
+          heroUp ? "max-md:opacity-100 md:opacity-0" : "opacity-100"
         }`}
       >
-        {hint}
-      </p>
+        <div className="flex gap-1.5">
+          {Array.from({ length: 7 }, (_, i) => (
+            <span
+              key={i}
+              className={`h-1 rounded-full transition-all duration-300 ${
+                i === active ? "w-8 bg-gold" : "w-3 bg-sand/25"
+              }`}
+            />
+          ))}
+        </div>
+        <p
+          className={`rounded-full text-[10px] tracking-[0.3em] uppercase transition-all duration-500 ${
+            active > 0 ? "px-4 py-1.5 text-sand/90" : "text-sand/50"
+          }`}
+        >
+          {hint}
+        </p>
+      </div>
     </div>
   );
 }
@@ -662,7 +665,7 @@ export default function KasbahTour({
           conceptPath={conceptPath}
         />
 
-        <ProgressRail active={railActive} fade={fade} hint={dict.common.scrollHint} />
+        <ProgressRail active={railActive} fade={fade} hint={dict.common.scrollHint} heroUp={progress < 0.02} />
 
         {/* Hero — only before the tour starts (chapter 1's opening beat).
             Readability comes from the SCENE (HeroDim dims the model while
