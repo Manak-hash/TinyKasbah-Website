@@ -44,6 +44,10 @@ export default async function ConceptPage({
       {/* ---------- The whole page IS the free-explore 3D interior ---------- */}
       <KasbahInterior dict={dict} />
 
+      {/* H1 hors écran : la page 3D n'a aucun titre visible, mais les
+          crawlers (et l'audit SEO) ont besoin d'un heading racine. */}
+      <h1 className="sr-only">{CONCEPT_TITLES[lang as AvailableLocale]}</h1>
+
       {/* ---------- Brand + link back to the main page ---------- */}
       <BrandMark
         href={homePath}
